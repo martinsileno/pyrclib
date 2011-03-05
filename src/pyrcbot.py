@@ -56,6 +56,13 @@ class PyrcBot(object):
         self.receiver.start()
         self.ls.start()
     
+    def disconnect(self, quitmsg=None):
+        """Disconnect from the server with an optional quit message.
+        The on_disconnect event will be called when done.
+        """
+        self.ls.raw_line('QUIT :' + quitmsg if quitmsg else '')
+        self.receiver.disconnect()
+        
     def line_received(self, line):
         if line.startswith('PING '):
             self.on_serverping()
@@ -69,6 +76,7 @@ class PyrcBot(object):
     
     def on_serverping(self):
         """Called on a PING request from the IRC server.
+        Shouldn't be overridden...
         """
         self.ls.raw_line('PONG ' + self.nick)
     

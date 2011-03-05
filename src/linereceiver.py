@@ -21,16 +21,19 @@ class LineReceiver(LineHandler):
             line = line[:-2]
         
         return line
+    
+    def disconnect(self):
+        self._socket.close()
+        self._bot.is_connected = False
+        self._bot.on_disconnect()
+        self._bot.logger.log('Disconnected from {0}'.format(self._bot.server))
         
     def run(self):
         while(self._bot.is_connected):
             line = self._read()
             if not line:
                 #Connection was dropped, disconnect
-                self._socket.close()
-                self._bot.is_connected = False
-                self._bot.on_disconnect()
-                self._bot.logger.log('Disconnected from {0}'.format(self._bot.server))
+                self.disconnect()
             
             try:
                 self._bot.logger.log(line)
