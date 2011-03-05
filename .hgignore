@@ -2,3 +2,5 @@ syntax:glob
 *.pyc
 .project
 .pydevproject
+config.ini
+src/testbot.py
