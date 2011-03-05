@@ -27,7 +27,7 @@ class PyrcBot(object):
         self.receiver = LineReceiver(self, s)
         # Manually handle connection to the server
         fo = s.makefile('rb')
-        self.ls = LineSender(self, s, self.msgqueue)
+        self.ls = LineSender(self, s)
         if password:
             self.ls.raw_line('PASS {0}'.format(password))
         self.ls.raw_line('NICK {0}'.format(self.nick))
@@ -54,6 +54,7 @@ class PyrcBot(object):
             self.logger.log(line)
         
         self.receiver.start()
+        self.ls.start()
     
     def line_received(self, line):
         if line.startswith('PING '):
@@ -70,6 +71,21 @@ class PyrcBot(object):
         """Called on a PING request from the IRC server.
         """
         self.ls.raw_line('PONG ' + self.nick)
+    
+    ### IRC Commands ###
+    def join_channel(self, channel, key=None):
+        """Joins a channel with an optional key.
+        """
+        s = 'JOIN ' + channel
+        if key:
+            s += ' ' + key
+        
+        self.ls.raw_line(s)
+    
+    def privmsg(self, target, msg):
+        """Sends a message to a channel or a user.
+        """
+        self.msgqueue.add('PRIVMSG {0} :{1}'.format(target, msg))
     
     ### Set bot properties ###
     def set_nick(self, nick):

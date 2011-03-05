@@ -1,17 +1,22 @@
+import time
 from collections import deque
 from linehandler import LineHandler
 
 class LineSender(LineHandler):
-    def __init__(self, bot, socket, queue):
+    def __init__(self, bot, socket):
         LineHandler.__init__(self, bot, socket)
-        self._queue = queue
     
     def raw_line(self, line):
         self._socket.sendall((line + self._CRLF).encode())
         self._bot.logger.log('>>> ' + line)
         
     def run(self):
-        pass
+        while(True):
+            msg = self._bot.msgqueue.pop()
+            if msg:
+                self.raw_line(msg)
+            
+            time.sleep(self._bot.msgqueue.delay / 1000)
     
 class MessageQueue(object):
     def __init__(self, delay):
