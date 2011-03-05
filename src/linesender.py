@@ -8,6 +8,7 @@ class LineSender(LineHandler):
     
     def raw_line(self, line):
         self._socket.sendall((line + self._CRLF).encode())
+        self._bot.logger.log('>>> ' + line)
         
     def run(self):
         pass

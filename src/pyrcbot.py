@@ -8,7 +8,7 @@ class PyrcBot(object):
     def __init__(self):
         self.delay = 1000
         self.logger = Logger()
-        self.nick = 'Pyrcbot'
+        self.nick = 'C1-PIRL8'
         self.realname = 'Python IRC bot'
         self.is_connected = False
         self.msgqueue = MessageQueue(self.delay)
@@ -27,21 +27,49 @@ class PyrcBot(object):
         self.receiver = LineReceiver(self, s)
         # Manually handle connection to the server
         fo = s.makefile('rb')
-        ls = LineSender(self, s, self.msgqueue)
-        ls.raw_line('NICK {0}'.format(self.nick))
-        ls.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
+        self.ls = LineSender(self, s, self.msgqueue)
+        if password:
+            self.ls.raw_line('PASS {0}'.format(password))
+        self.ls.raw_line('NICK {0}'.format(self.nick))
+        self.ls.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
         while True:
             line = fo.readline()
             if not line:
                 break
             
+            line = line.decode()
+            if line[-2:] == '\r\n':
+                line = line[:-2]
+            
+            srv, code, me, msg = line.split(' ', 3)
+            if code == const.RPL_MYINFO:
+                self.is_connected = True
+                break # Successful connection
+            elif code == const.ERR_NICKNAMEINUSE:
+                #TODO: change to altnick
+                self.nick += '_'
+                self.ls.raw_line('NICK {0}'.format(self.nick))
+            
+            
             self.logger.log(line)
+        
+        self.receiver.start()
+    
+    def line_received(self, line):
+        if line.startswith('PING '):
+            self.on_serverping()
+            return
         
     ### Events ###
     def on_disconnect(self):
         """Called on disconnection from a server, can be overridden as required.
         """
         pass
+    
+    def on_serverping(self):
+        """Called on a PING request from the IRC server.
+        """
+        self.ls.raw_line('PONG ' + self.nick)
     
     ### Set bot properties ###
     def set_nick(self, nick):

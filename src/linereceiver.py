@@ -12,8 +12,13 @@ class LineReceiver(LineHandler):
         if not line:
             return None
         
+        try: #Try decoding the string as UTF-8, if it fails, use latin-1
+            line = line.decode()
+        except UnicodeDecodeError as exc:
+            line = line.decode('latin-1')
+                
         if line[-2:] == self._CRLF:
-            line = line[-2:]
+            line = line[:-2]
         
         return line
         
@@ -26,9 +31,10 @@ class LineReceiver(LineHandler):
                 self._bot.is_connected = False
                 self._bot.on_disconnect()
                 self._bot.logger.log('Disconnected from {0}'.format(self._bot.server))
-                
+            
             try:
+                self._bot.logger.log(line)
                 self._bot.line_received(line)
             except Exception as exc:
                 #TODO: Unhandled exception in bot's line receiver
-                pass
+                raise exc
