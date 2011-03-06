@@ -234,21 +234,6 @@ class PyrcBot(object):
         This method must not be overridden. 
         """
         self.sender.add('PRIVMSG {0} :{1}'.format(target, msg))
-    
-    ### Set bot properties ###
-    def set_nick(self, nick):
-        """Sets the nick the bot will use when connecting to the server.
-        Must be set before connecting or it will use its default nick.
-        """
-        self.nick = nick
-    
-    def set_realname(self, name):
-        """Sets the bot's realname. Must be set before connecting.
-        """
-        self.realname = name
-        
-    def set_delay(self, new_delay):
-        self.sender.set_delay(new_delay)
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
