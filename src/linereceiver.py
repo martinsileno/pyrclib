@@ -24,6 +24,7 @@ class LineReceiver(LineHandler):
     
     def disconnect(self):
         self._socket.close()
+        self._bot.sender.stop()
         self._bot.is_connected = False
         self._bot.on_disconnect()
         self._bot.logger.log('Disconnected from {0}'.format(self._bot.server))

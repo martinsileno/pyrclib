@@ -14,27 +14,26 @@ class LineSender(LineHandler):
         LineHandler.__init__(self, bot, socket)
         self.delay = delay
         self.queue = deque()
+        self.alive = True
     
     def raw_line(self, line):
         self._socket.sendall((line + self._CRLF).encode())
         self._bot.logger.log('>>> ' + line)
         
     def run(self):
-        while(True):
+        while self.alive:
             msg = self.pop()
             if msg:
                 self.raw_line(msg)
                 time.sleep(self.delay / 1000)
             else:
-                self._cond.acquire()
-                self._cond.wait()
-                self._cond.release()
+                with self._cond:
+                    self._cond.wait()
     
     def add(self, msg):
-        self._cond.acquire()
-        self.queue.append(msg)
-        self._cond.notify()
-        self._cond.release()
+        with self._cond:
+            self.queue.append(msg)
+            self._cond.notify()
     
     def is_empty(self):
         if self.queue:
@@ -50,7 +49,7 @@ class LineSender(LineHandler):
         
         return msg
     
-    def set_delay(self, new_delay):
-        """Change delay between each message sent to the server.
-        """
-        self.delay = new_delay
+    def stop(self):
+        with self._cond:
+            self.alive = False
+            self._cond.notify()

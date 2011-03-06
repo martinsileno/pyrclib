@@ -70,7 +70,7 @@ class PyrcBot(object):
         """Disconnect from the server with an optional quit message.
         The on_disconnect event will be called when done.
         """
-        self.sender.raw_line('QUIT :' + quitmsg if quitmsg else '')
+        self.sender.raw_line('QUIT :{0}'.format(quitmsg if quitmsg else ''))
         self.receiver.disconnect()
         
     def line_received(self, line):
