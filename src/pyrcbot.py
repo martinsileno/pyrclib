@@ -1,4 +1,5 @@
 import socket
+import events
 import ircconstants as const
 from linereceiver import LineReceiver
 from linesender import LineSender, MessageQueue
@@ -12,6 +13,7 @@ class PyrcBot(object):
         self.realname = 'Python IRC bot'
         self.is_connected = False
         self.msgqueue = MessageQueue(self.delay)
+        self.dispatcher = events.EventDispatcher(self)
     
     def connect(self, server, port=6667, password=None, useSSL=False):
         """Connect to the specified IRC server
@@ -64,9 +66,21 @@ class PyrcBot(object):
         self.receiver.disconnect()
         
     def line_received(self, line):
+        """Called on every line received from the server.
+        This method must not be overridden.
+        """
         if line.startswith('PING '):
             self.on_serverping()
             return
+        
+        self.dispatcher.dispatch(line)
+    
+    def _parse_nick(self, s):
+        """Function to split nick!user@host into a dict with nick, user and host as keys.
+        """
+        u, host = s.split('@', 1)
+        nick, user = u.split('!', 1)
+        return {'nick': nick, 'user': user, 'host': host}
         
     ### Events ###
     def on_disconnect(self):
@@ -79,6 +93,57 @@ class PyrcBot(object):
         Shouldn't be overridden...
         """
         self.ls.raw_line('PONG ' + self.nick)
+    
+    def on_privmsg(self, sender, channel, message):
+        """Called when a channel message is received.
+        """
+        pass
+    
+    def on_action(self, sender, channel, message):
+        """Called when an action is received (/me does something).
+        """
+        pass
+    
+    def on_join(self, user, channel):
+        """Called when someone (our bot included) joins a channel.
+        """
+        pass
+    
+    def on_part(self, user, channel, reason):
+        """Called when someone (out bot included) parts from a channel.
+        """
+        pass
+    
+    def on_nickchange(self, oldnick, newnick):
+        """Called when someone (our bot included) changes nick.
+        """
+        pass
+    
+    def on_notice(self, sender, target, message):
+        """Called when a notice is received. Target can be a channel or our bot's nick.
+        """
+        pass
+    
+    def on_quit(self, user, reason):
+        """Called when someone (our bot included) quits from IRC.
+        """
+        pass
+    
+    def on_kick(self, sender, target, channel, reason):
+        """Called when someone (our bot included) gets kicked from a channel.
+        """
+        pass
+    
+    def on_topicchange(self, sender, channel, newtopic):
+        """Called when someone changes channel topic.
+        """
+        pass
+    
+    def on_invite(self, sender, target, channel):
+        """TODO
+        """
+        pass
+    
     
     ### IRC Commands ###
     def join_channel(self, channel, key=None):
