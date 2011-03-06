@@ -4,7 +4,7 @@ from datetime import datetime
 import events
 import ircconstants as const
 from linereceiver import LineReceiver
-from linesender import LineSender, MessageQueue
+from linesender import LineSender
 from logger import Logger
 
 class PyrcBot(object):
@@ -14,7 +14,6 @@ class PyrcBot(object):
         self.nick = 'C1-PIRL8'
         self.realname = 'Python IRC bot'
         self.is_connected = False
-        self.msgqueue = MessageQueue(self.delay)
         self.dispatcher = events.EventDispatcher(self)
         
         #CTCP replies, should be set in a separate config file
@@ -38,11 +37,11 @@ class PyrcBot(object):
         self.receiver = LineReceiver(self, s)
         # Manually handle connection to the server
         fo = s.makefile('rb')
-        self.ls = LineSender(self, s)
+        self.sender = LineSender(self, s, self.delay)
         if password:
-            self.ls.raw_line('PASS {0}'.format(password))
-        self.ls.raw_line('NICK {0}'.format(self.nick))
-        self.ls.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
+            self.sender.raw_line('PASS {0}'.format(password))
+        self.sender.raw_line('NICK {0}'.format(self.nick))
+        self.sender.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
         while True:
             line = fo.readline()
             if not line:
@@ -59,19 +58,19 @@ class PyrcBot(object):
             elif code == const.ERR_NICKNAMEINUSE:
                 #TODO: change to altnick
                 self.nick += '_'
-                self.ls.raw_line('NICK {0}'.format(self.nick))
+                self.sender.raw_line('NICK {0}'.format(self.nick))
             
             
             self.logger.log(line)
         
         self.receiver.start()
-        self.ls.start()
+        self.sender.start()
     
     def disconnect(self, quitmsg=None):
         """Disconnect from the server with an optional quit message.
         The on_disconnect event will be called when done.
         """
-        self.ls.raw_line('QUIT :' + quitmsg if quitmsg else '')
+        self.sender.raw_line('QUIT :' + quitmsg if quitmsg else '')
         self.receiver.disconnect()
         
     def line_received(self, line):
@@ -101,7 +100,7 @@ class PyrcBot(object):
         """Called on a PING request from the IRC server.
         Shouldn't be overridden...
         """
-        self.ls.raw_line('PONG ' + self.nick)
+        self.sender.raw_line('PONG ' + self.nick)
     
     def on_privmsg(self, sender, channel, message):
         """Called when a channel message is received.
@@ -208,12 +207,13 @@ class PyrcBot(object):
     ### IRC Commands ###
     def join_channel(self, channel, key=None):
         """Joins a channel with an optional key.
+        This method must not be overridden.
         """
         s = 'JOIN ' + channel
         if key:
             s += ' ' + key
         
-        self.ls.raw_line(s)
+        self.sender.raw_line(s)
     
     def ctcpreply(self, target, type, reply=None):
         """Sends a reply (a notice) to a CTCP request.
@@ -227,13 +227,13 @@ class PyrcBot(object):
         """Sends a notice to a channel or a user.
         This method must not be overridden.
         """
-        self.msgqueue.add('NOTICE {0} :{1}'.format(target, msg))
+        self.sender.add('NOTICE {0} :{1}'.format(target, msg))
     
     def privmsg(self, target, msg):
         """Sends a message to a channel or a user.
         This method must not be overridden. 
         """
-        self.msgqueue.add('PRIVMSG {0} :{1}'.format(target, msg))
+        self.sender.add('PRIVMSG {0} :{1}'.format(target, msg))
     
     ### Set bot properties ###
     def set_nick(self, nick):
@@ -248,7 +248,7 @@ class PyrcBot(object):
         self.realname = name
         
     def set_delay(self, new_delay):
-        self.msgqueue.set_delay(new_delay)
+        self.sender.set_delay(new_delay)
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
