@@ -1,4 +1,6 @@
 import socket
+from datetime import datetime
+
 import events
 import ircconstants as const
 from linereceiver import LineReceiver
@@ -14,6 +16,13 @@ class PyrcBot(object):
         self.is_connected = False
         self.msgqueue = MessageQueue(self.delay)
         self.dispatcher = events.EventDispatcher(self)
+        
+        #CTCP replies, should be set in a separate config file
+        self.reply_clientinfo = 'CLIENTINFO FINGER PING SOURCE TIME USERINFO VERSION'
+        self.reply_finger = 'Don\'t finger me, pervert!'
+        self.reply_source = 'http://trac.1way.it/'
+        self.reply_userinfo = ''
+        self.reply_version = 'Pyrcbot'
     
     def connect(self, server, port=6667, password=None, useSSL=False):
         """Connect to the specified IRC server
@@ -144,7 +153,58 @@ class PyrcBot(object):
         """
         pass
     
+    # -- CTCP events -- #
+    # All CTCP descriptions are taken from:
+    # http://www.irchelp.org/irchelp/rfc/ctcpspec.html
     
+    def on_CTCP_clientinfo(self, sender, target, arg):
+        """This is for client developers use to make it easier to show other
+        client hackers what a certain client knows when it comes to CTCP. The
+        replies should be fairly verbose explaining what CTCP commands are
+        understood.
+        """
+        self.ctcpreply(sender['nick'], 'CLIENTINFO', self.reply_clientinfo)
+    
+    def on_CTCP_finger(self, sender, target, arg):
+        """This is used to get a user's real name, and perhaps also the idle time
+        of the user (this usage has been obsoleted by enhancements to the IRC
+        protocol).
+        """
+        self.ctcpreply(sender['nick'], 'FINGER', self.reply_finger)
+    
+    def on_CTCP_ping(self, sender, target, arg):
+        """Ping is used to measure the time delay between clients on the IRC
+        network.
+        The replying client sends back an identical message inside a notice.
+        """
+        self.ctcpreply(sender['nick'], 'PING', arg)
+    
+    def on_CTCP_source(self, sender, target, arg):
+        """This is used to get information about where to get a copy of the
+        client.
+        """
+        self.ctcpreply(sender['nick'], 'SOURCE', self.reply_source)
+    
+    def on_CTCP_time(self, sender, target, arg):
+        """Time queries are used to determine what time it is where another
+        user's client is running.
+        """
+        #TODO: allow custom reply.
+        self.ctcpreply(sender['nick'], 'TIME', str(datetime.now())[:19])
+    
+    def on_CTCP_userinfo(self, sender, target, arg):
+        """This is used to transmit a string which is settable by the user (and
+        never should be set by the client).
+        """
+        if self.reply_userinfo:
+            self.ctcpreply(sender['nick'], 'USERINFO', self.reply_userinfo)
+    
+    def on_CTCP_version(self, sender, target, arg):
+        """This is used to get information about the name of the other client and
+        the version of it
+        """
+        self.ctcpreply(sender['nick'], 'VERSION', self.reply_version)
+        
     ### IRC Commands ###
     def join_channel(self, channel, key=None):
         """Joins a channel with an optional key.
@@ -155,8 +215,23 @@ class PyrcBot(object):
         
         self.ls.raw_line(s)
     
+    def ctcpreply(self, target, type, reply=None):
+        """Sends a reply (a notice) to a CTCP request.
+        This method must not be overridden.
+        """
+        r = '{0}{1}{0}'.format(chr(1), 
+                            type if not reply else '{0} {1}'.format(type, reply))
+        self.notice(target, r)
+    
+    def notice(self, target, msg):
+        """Sends a notice to a channel or a user.
+        This method must not be overridden.
+        """
+        self.msgqueue.add('NOTICE {0} :{1}'.format(target, msg))
+    
     def privmsg(self, target, msg):
         """Sends a message to a channel or a user.
+        This method must not be overridden. 
         """
         self.msgqueue.add('PRIVMSG {0} :{1}'.format(target, msg))
     
