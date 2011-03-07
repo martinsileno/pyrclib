@@ -228,13 +228,23 @@ class PyrcBot(object):
         pass
 
     ### IRC Commands ###
-    def join_channel(self, channel, key=None):
+    def join(self, channel, key=None):
         """Joins a channel with an optional key.
         This method must not be overridden.
         """
         s = 'JOIN ' + channel
         if key:
             s += ' ' + key
+        
+        self.sender.raw_line(s)
+        
+    def part(self, channel, reason=None):
+        """Parts from a channel with an optional reason.
+        This method must not be overridden.
+        """
+        s = 'PART ' + channel
+        if reason:
+            s += ' ' + reason
         
         self.sender.raw_line(s)
     
@@ -260,8 +270,16 @@ class PyrcBot(object):
     
     def identify(self, password):
         """Identifies the bot to NickServ.
+        This method must not be overridden.
         """
         self.sender.raw_line('NICKSERV IDENTIFY {0}'.format(password))
+    
+    def nickchange(self, newnick):
+        """This method changes our bot's nick. It could fail, for example
+        if the new nickname is not available.
+        This method must not be overridden.
+        """
+        self.sender.raw_line('NICK {0}'.format(newnick))
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
