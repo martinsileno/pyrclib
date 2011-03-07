@@ -279,6 +279,15 @@ class PyrcBot(object):
         """
         self.sender.raw_line('INVITE {0} {1}'.format(user, channel))
     
+    def kick(self, channel, user, reason=None):
+        """Used to kick a user out of a channel with an optional reason.
+        """
+        s = 'KICK {0} {1}'.format(channel, user)
+        if reason:
+            s += ' :' + reason
+        
+        self.sender.raw_line(s)
+    
     def nickchange(self, newnick):
         """This method changes our bot's nick. It could fail, for example
         if the new nickname is not available.
