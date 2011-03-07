@@ -280,6 +280,17 @@ class PyrcBot(object):
         This method must not be overridden.
         """
         self.sender.raw_line('NICK {0}'.format(newnick))
+        
+    def topic(self, channel, newtopic=None):
+        """This method is used to change a channel's topic.
+        If no newtopic is given, the server will reply with the current topic.
+        This method must not be overridden.
+        """
+        s = 'TOPIC ' + channel
+        if newtopic:
+            s += ' :' + newtopic
+        
+        self.sender.raw_line(s)
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
