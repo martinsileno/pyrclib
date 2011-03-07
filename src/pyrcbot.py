@@ -126,7 +126,7 @@ class PyrcBot(object):
         """
         pass
     
-    def on_part(self, user, channel, reason):
+    def on_part(self, user, channel, reason=None):
         """Called when someone (out bot included) parts from a channel.
         """
         pass
@@ -244,7 +244,7 @@ class PyrcBot(object):
         """
         s = 'PART ' + channel
         if reason:
-            s += ' ' + reason
+            s += ' :' + reason
         
         self.sender.raw_line(s)
     
