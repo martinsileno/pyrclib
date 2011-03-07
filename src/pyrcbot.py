@@ -34,6 +34,12 @@ class PyrcBot(object):
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((server, port)) # Exceptions?
+        if useSSL:
+            try:
+                import ssl
+            except ImportError:
+                raise
+            s = ssl.wrap_socket(s)
         self.receiver = LineReceiver(self, s)
         # Manually handle connection to the server
         fo = s.makefile('rb')
@@ -268,4 +274,9 @@ class AlreadyConnectedException(ConnectException):
     def __init__(self):
         self.msg = 'Already connected to a server. Disconnect before trying a \
         new connection.'
+
+class SSLNotAvailableException(ConnectException):
+    def __init__(self):
+        self.msg = 'SSL module is not available.'
+
     
