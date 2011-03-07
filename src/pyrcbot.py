@@ -251,6 +251,11 @@ class PyrcBot(object):
         This method must not be overridden. 
         """
         self.sender.add('PRIVMSG {0} :{1}'.format(target, msg))
+    
+    def identify(self, password):
+        """Identifies the bot to NickServ.
+        """
+        self.sender.raw_line('NICKSERV IDENTIFY {0}'.format(password))
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
