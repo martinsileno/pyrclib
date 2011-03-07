@@ -7,7 +7,7 @@ class EventDispatcher(object):
             'INVITE'     : self.bot.on_invite,
             'JOIN'       : self.bot.on_join,
             'KICK'       : self.bot.on_kick,
-            'MODE'       : self._parse_mode,
+            'MODE'       : self.bot.on_modechange,
             'NICK'       : self.bot.on_nickchange,
             'NOTICE'     : self.bot.on_notice,
             'PART'       : self.bot.on_part,
@@ -46,11 +46,6 @@ class EventDispatcher(object):
                     self.ctcpmap[command](sender, target, arg)
         else:
             self.bot.on_privmsg(sender, target, message)
-    
-    def _parse_mode(self, *args):
-        """
-        """
-        pass
     
     def _parsemsg(self, s):
         """Breaks a message from an IRC server into its prefix, command, and arguments.

@@ -89,8 +89,11 @@ class PyrcBot(object):
         u, host = s.split('@', 1)
         nick, user = u.split('!', 1)
         return {'nick': nick, 'user': user, 'host': host}
-        
-    ### Events ###
+    
+    #===========================================================================
+    # Events
+    #===========================================================================
+    
     def on_disconnect(self):
         """Called on disconnection from a server, can be overridden as required.
         """
@@ -152,9 +155,11 @@ class PyrcBot(object):
         """
         pass
     
+    #===========================================================================
     # -- CTCP events -- #
     # All CTCP descriptions are taken from:
     # http://www.irchelp.org/irchelp/rfc/ctcpspec.html
+    #===========================================================================
     
     def on_CTCP_clientinfo(self, sender, target, arg):
         """This is for client developers use to make it easier to show other
@@ -203,7 +208,19 @@ class PyrcBot(object):
         the version of it
         """
         self.ctcpreply(sender['nick'], 'VERSION', self.reply_version)
+    
+    #===========================================================================
+    # Mode events
+    #===========================================================================
         
+    def on_modechange(self, *args):
+        """Called whenever a mode is changed.
+        Subclasses should override this method to call appropriate events
+        for their server's IRCd.
+        See also: ticket #4.
+        """
+        pass
+
     ### IRC Commands ###
     def join_channel(self, channel, key=None):
         """Joins a channel with an optional key.
