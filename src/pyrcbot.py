@@ -274,6 +274,11 @@ class PyrcBot(object):
         """
         self.sender.raw_line('NICKSERV IDENTIFY {0}'.format(password))
     
+    def invite(self, channel, user):
+        """Used to invite someone in a channel.
+        """
+        self.sender.raw_line('INVITE {0} {1}'.format(user, channel))
+    
     def nickchange(self, newnick):
         """This method changes our bot's nick. It could fail, for example
         if the new nickname is not available.
