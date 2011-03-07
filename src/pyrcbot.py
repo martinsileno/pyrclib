@@ -38,7 +38,7 @@ class PyrcBot(object):
             try:
                 import ssl
             except ImportError:
-                raise
+                raise SSLNotAvailableException()
             s = ssl.wrap_socket(s)
         self.receiver = LineReceiver(self, s)
         # Manually handle connection to the server
