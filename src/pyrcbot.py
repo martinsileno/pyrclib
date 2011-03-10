@@ -23,17 +23,23 @@ class PyrcBot(object):
         self.reply_userinfo = ''
         self.reply_version = 'Pyrcbot'
     
-    def connect(self, server, port=6667, password=None, useSSL=False):
-        """Connect to the specified IRC server
-        """        
-        self.server = server
+    def connect(self, address, port=6667, password=None, useSSL=False):
+        """Connect to the specified IRC server.
+        - address: the address of the server
+        - port: port of the server, defaults to 6667
+        - password: if a password is required to connect
+        - useSSL: use a secure connection with SSL
+        """
+        self.server = address
         if self.is_connected:
             raise AlreadyConnectedException()
         
-        self.logger.log('Connecting to server: {0}'.format(server))
+        self.logger.log('Connecting to server: {0}'.format(address))
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((server, port)) # Exceptions?
+        s.connect((address, port)) # TODO: Exceptions?
+        
+        # Using SSL?
         if useSSL:
             try:
                 import ssl
@@ -41,13 +47,17 @@ class PyrcBot(object):
                 raise SSLNotAvailableException()
             s = ssl.wrap_socket(s)
         self.receiver = LineReceiver(self, s)
+        
         # Manually handle connection to the server
-        fo = s.makefile('rb')
         self.sender = LineSender(self, s, self.delay)
+        
         if password:
             self.sender.raw_line('PASS {0}'.format(password))
+        
         self.sender.raw_line('NICK {0}'.format(self.nick))
         self.sender.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
+        
+        fo = s.makefile('rb')
         while True:
             line = fo.readline()
             if not line:
@@ -56,6 +66,9 @@ class PyrcBot(object):
             line = line.decode()
             if line[-2:] == '\r\n':
                 line = line[:-2]
+            
+            if line.startswith('PING') or line.startswith('PONG'):
+                continue # unreal pings on connect?
             
             srv, code, me, msg = line.split(' ', 3)
             if code == const.RPL_MYINFO:
@@ -308,8 +321,11 @@ class PyrcBot(object):
 
 ### Connect Exceptions ###
 class ConnectException(BaseException):
-    def __init__(self):
-        self.msg = 'An exception occurred connecting to the IRC server.'
+    def __init__(self, msg=None):
+        if not msg:
+            self.msg = 'An exception occurred connecting to the IRC server.'
+        else:
+            self.msg = msg
     def __str__(self):
         return repr(self.msg)
 
@@ -321,5 +337,3 @@ class AlreadyConnectedException(ConnectException):
 class SSLNotAvailableException(ConnectException):
     def __init__(self):
         self.msg = 'SSL module is not available.'
-
-    
