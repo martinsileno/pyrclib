@@ -68,7 +68,8 @@ class PyrcBot(object):
                 line = line[:-2]
             
             if line.startswith('PING') or line.startswith('PONG'):
-                continue # unreal pings on connect?
+                self.sender.raw_line('PONG ' + line.split(' ')[1])
+                continue
             
             srv, code, me, msg = line.split(' ', 3)
             if code == const.RPL_MYINFO:
