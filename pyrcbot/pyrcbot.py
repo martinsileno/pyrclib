@@ -1,11 +1,11 @@
 import socket
 from datetime import datetime
 
-import events
-import ircconstants as const
-from linereceiver import LineReceiver
-from linesender import LineSender
-from logger import Logger
+from pyrcbot import events
+import pyrcbot.ircconstants as const
+from pyrcbot.linereceiver import LineReceiver
+from pyrcbot.linesender import LineSender
+from pyrcbot.logger import Logger
 
 class PyrcBot(object):
     def __init__(self):
