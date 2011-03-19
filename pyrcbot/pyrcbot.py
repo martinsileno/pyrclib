@@ -302,6 +302,26 @@ class PyrcBot(object):
         
         self.sender.raw_line(s)
     
+    def voice(self, channel, user):
+        """Voices a user (or more, if user is a list) in a channel.
+        """
+        m = 'v'
+        if isinstance(user, list):
+            m = m * len(user)
+        else:
+            user = [user]
+        self.set_mode(channel, m, user)
+    
+    def op(self, channel, user):
+        """Ops a user (or more, if user is a list) in a channel.
+        """
+        m = 'o'
+        if isinstance(user, list):
+            m = m * len(user)
+        else:
+            user = [user]
+        self.set_mode(channel, m, user)
+    
     def nickchange(self, newnick):
         """This method changes our bot's nick. It could fail, for example
         if the new nickname is not available.
@@ -319,7 +339,28 @@ class PyrcBot(object):
             s += ' :' + newtopic
         
         self.sender.raw_line(s)
-
+    
+    def set_mode(self, channel, mode, args=None):
+        """Set a mode (or more than one) in a channel with optional arguments.
+        - args is a list.
+        """
+        s = 'MODE {0} +{1}'.format(channel, mode)
+        if args:
+            s += ' ' + ' '.join(args)
+        
+        self.sender.raw_line(s)
+        
+    def unset_mode(self, channel, mode, args=None):
+        """Removes a mode (or more than one) from a channel with optional 
+        arguments.
+        - args is a list.
+        """
+        s = 'MODE {0} -{1}'.format(channel, mode)
+        if args:
+            s += ' ' + ' '.join(args)
+        
+        self.sender.raw_line(s)
+    
 ### Connect Exceptions ###
 class ConnectException(BaseException):
     def __init__(self, msg=None):

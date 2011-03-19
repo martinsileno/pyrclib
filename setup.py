@@ -12,7 +12,7 @@ setup(name='Pyrcbot',
       author_email='martin@1way.it',
       license='MIT',
       url='http://trac.1way.it/',
-      packages=['pyrcbot'],
+      packages=['pyrcbot', 'pyrcbot.utils'],
       classifiers=[
             'Intended Audience :: Developers',
             'Programming Language :: Python',

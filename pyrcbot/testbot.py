@@ -29,6 +29,10 @@ class NiceBot(PyrcBot):
             self.kick('#1way', 'ma')
         elif message == 'rkick':
             self.kick('#1way', 'ma', 'kick sponsored by 1way.it')
+        elif message == 'mvoice':
+            self.voice('#1way', ['martin', 'NiceBot'])
+        elif message == 'voice':
+            self.voice('#1way', 'martin')
 
 if __name__ == '__main__':
     p = NiceBot()
