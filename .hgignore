@@ -3,4 +3,4 @@ syntax:glob
 .project
 .pydevproject
 config.ini
-src/testbot.py
+pyrcbot/testbot.py
