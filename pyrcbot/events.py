@@ -9,7 +9,7 @@ class EventDispatcher(object):
             'KICK'       : self.bot.on_kick,
             'MODE'       : self.bot.on_modechange,
             'NICK'       : self.bot.on_nickchange,
-            'NOTICE'     : self.bot.on_notice,
+            'NOTICE'     : self._parse_notice,
             'PART'       : self.bot.on_part,
             'PRIVMSG'    : self._parse_privmsg,
             'QUIT'       : self.bot.on_quit,
@@ -27,6 +27,9 @@ class EventDispatcher(object):
             'USERINFO'   : self.bot.on_CTCP_userinfo,
             'VERSION'    : self.bot.on_CTCP_version,
             }
+        
+        self.ctcpreplymap = {
+            'PING'       : self.bot.on_CTCPREPLY_ping}
     
     def _parse_privmsg(self, sender, target, message):
         """Not all PRIVMSGs will trigger the on_privmsg event,
@@ -46,6 +49,21 @@ class EventDispatcher(object):
                     self.ctcpmap[command](sender, target, arg)
         else:
             self.bot.on_privmsg(sender, target, message)
+    
+    def _parse_notice(self, sender, target, message):
+        """Not all NOTICEs will trigger the on_notice event,
+        in this function we'll check if it's actually a notice or a CTCP reply. 
+        """
+        if message.startswith(chr(1)) and message.endswith(chr(1)):
+            message = message[1:-1]
+            if ' ' in message:
+                command, arg = message.split(' ', 1)
+            else:
+                command, arg = message, ''
+            if command in self.ctcpreplymap:
+                self.ctcpreplymap[command](sender, target, arg)
+        else:
+            self.bot.on_notice(sender, target, message)
     
     def _parsemsg(self, s):
         """Breaks a message from an IRC server into its prefix, command, and arguments.

@@ -1,4 +1,5 @@
 import socket
+import time
 from datetime import datetime
 
 from pyrcbot import events
@@ -12,6 +13,7 @@ class PyrcBot(object):
         self.delay = 1000
         self.logger = Logger()
         self.nick = 'C1-PIRL8'
+        self.user = 'c'
         self.realname = 'Python IRC bot'
         self.is_connected = False
         self.dispatcher = events.EventDispatcher(self)
@@ -55,7 +57,7 @@ class PyrcBot(object):
             self.sender.raw_line('PASS {0}'.format(password))
         
         self.sender.raw_line('NICK {0}'.format(self.nick))
-        self.sender.raw_line('USER {0} * * :{1}'.format(self.nick, self.realname))
+        self.sender.raw_line('USER {0} * * :{1}'.format(self.user, self.realname))
         
         fo = s.makefile('rb')
         while True:
@@ -225,9 +227,14 @@ class PyrcBot(object):
     
     def on_CTCP_version(self, sender, target, arg):
         """This is used to get information about the name of the other client and
-        the version of it
+        the version of it.
         """
         self.ctcpreply(sender['nick'], 'VERSION', self.reply_version)
+    
+    def on_CTCPREPLY_ping(self, sender, target, arg):
+        """Triggered when someone replies to our CTCP ping query.
+        """
+        pass
     
     #===========================================================================
     # Mode events
@@ -269,6 +276,18 @@ class PyrcBot(object):
         r = '{0}{1}{0}'.format(chr(1), 
                             type if not reply else '{0} {1}'.format(type, reply))
         self.notice(target, r)
+    
+    def ping(self, target, ts=None):
+        """Sends a CTCP Ping request to a target.
+        """
+        self.ctcpquery(target, 'PING', ts if ts else int(time.time()))
+    
+    def ctcpquery(self, target, type, args=None):
+        """Sends a CTCP request (privmsg) to a target.
+        This method must not be overridden.
+        """
+        r = '{0}{1}{2}{0}'.format(chr(1), type, ' {0}'.format(args) if args else '')
+        self.privmsg(target, r)
     
     def notice(self, target, msg):
         """Sends a notice to a channel or a user.

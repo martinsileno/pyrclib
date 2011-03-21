@@ -3,4 +3,7 @@ syntax:glob
 .project
 .pydevproject
 config.ini
-pyrcbot/testbot.py
+*testbot.py
+build/*
+.settings/*
+
