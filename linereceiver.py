@@ -1,4 +1,4 @@
-from pyrcbot.linehandler import LineHandler
+from linehandler import LineHandler
 
 class LineReceiver(LineHandler):
     def __init__(self, bot, socket):

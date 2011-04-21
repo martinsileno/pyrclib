@@ -1,6 +1,6 @@
 import time
 from collections import deque
-from pyrcbot.linehandler import LineHandler
+from linehandler import LineHandler
 
 class LineSender(LineHandler):
     """This thread handles outgoing messages. 

@@ -2,11 +2,11 @@ import socket
 import time
 from datetime import datetime
 
-from pyrcbot import events
-import pyrcbot.ircconstants as const
-from pyrcbot.linereceiver import LineReceiver
-from pyrcbot.linesender import LineSender
-from pyrcbot.logger import Logger
+from events import EventDispatcher
+import ircconstants as const
+from linereceiver import LineReceiver
+from linesender import LineSender
+from logger import Logger
 
 class PyrcBot(object):
     def __init__(self):
@@ -16,7 +16,7 @@ class PyrcBot(object):
         self.user = 'c'
         self.realname = 'Python IRC bot'
         self.is_connected = False
-        self.dispatcher = events.EventDispatcher(self)
+        self.dispatcher = EventDispatcher(self)
         
         #CTCP replies, should be set in a separate config file
         self.reply_clientinfo = 'CLIENTINFO FINGER PING SOURCE TIME USERINFO VERSION'
