@@ -1,3 +1,5 @@
+from user import User
+
 class EventDispatcher(object):
     """
     """
@@ -5,7 +7,7 @@ class EventDispatcher(object):
         self.bot = bot
         self.usermap = {
             'INVITE'     : self.bot.on_invite,
-            'JOIN'       : self.bot.on_join,
+            'JOIN'       : self.bot._pre_join,
             'KICK'       : self.bot.on_kick,
             'MODE'       : self.bot.on_modechange,
             'NICK'       : self.bot.on_nickchange,
@@ -30,6 +32,13 @@ class EventDispatcher(object):
         
         self.ctcpreplymap = {
             'PING'       : self.bot.on_CTCPREPLY_ping}
+        
+        self.rawsmap = {
+            '331': self.bot.raw_331,
+            '332': self.bot.raw_332,
+            '333': self.bot.raw_333,
+            '353': self.bot.raw_353,
+            }
     
     def _parse_privmsg(self, sender, target, message):
         """Not all PRIVMSGs will trigger the on_privmsg event,
@@ -88,14 +97,21 @@ class EventDispatcher(object):
         """
         prefix, command, args = self._parsemsg(line)
         if '!' in prefix and '@' in prefix:
-            u, host = prefix.split('@', 1)
-            nick, user = u.split('!', 1)
-            sender = {'nick': nick, 'user': user, 'host': host}
+            nick, h = prefix.split('!', 1)
+            ident, host = h.split('@', 1)
+            
+            if nick in self.bot.users:
+                sender = self.bot.users[nick]
+            else:
+                sender = User(nick, ident, host)
+            
             if command in self.usermap:
                 self.usermap[command](sender, *args)
             else:
                 self.bot.on_unknown(sender, *args)
         else:
-            #It's a server message
-            #TODO: parse it!
-            pass
+            # command = raw numeric
+            if command in self.rawsmap:
+                self.rawsmap[command](*args[1:])
+            else:
+                self.bot.raw_unknown(command, *args)

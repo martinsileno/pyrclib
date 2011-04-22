@@ -12,11 +12,12 @@ class PyrcBot(object):
     def __init__(self):
         self.delay = 1000
         self.logger = Logger()
-        self.nick = 'C1-PIRL8'
-        self.user = 'c'
-        self.realname = 'Python IRC bot'
         self.is_connected = False
         self.dispatcher = EventDispatcher(self)
+        
+        #User and channel lists
+        self.channels = {}
+        self.users = {}
         
         #CTCP replies, should be set in a separate config file
         self.reply_clientinfo = 'CLIENTINFO FINGER PING SOURCE TIME USERINFO VERSION'
@@ -105,15 +106,47 @@ class PyrcBot(object):
         
         self.dispatcher.dispatch(line)
     
-    def _parse_nick(self, s):
-        """Function to split nick!user@host into a dict with nick, user and host as keys.
-        """
-        u, host = s.split('@', 1)
-        nick, user = u.split('!', 1)
-        return {'nick': nick, 'user': user, 'host': host}
     
     #===========================================================================
-    # Events
+    # Raw events
+    #===========================================================================
+    
+    def raw_331(self, channel, msg):
+        """This is returned for a TOPIC request if the channel has no current topic.
+        On JOIN, if a channel has no topic, this is not returned. 
+        Instead, no topic-related replies are returned.
+        """
+        pass
+    
+    def raw_332(self, channel, topic):
+        """This is returned for a TOPIC request or when you JOIN, 
+        if the channel has a topic.
+        """
+        pass
+    
+    def raw_333(self, *args):
+        pass
+    
+    def raw_353(self, *args):
+        pass
+    
+    def raw_unknown(self, numeric, *args):
+        pass
+    
+    #===========================================================================
+    # Private events
+    #
+    #===========================================================================
+    
+    def _pre_join(self, user, channel):
+        
+        
+        self.on_join(user, channel)
+    
+    
+    #===========================================================================
+    # Public events
+    #
     #===========================================================================
     
     def on_disconnect(self):
@@ -189,52 +222,54 @@ class PyrcBot(object):
         replies should be fairly verbose explaining what CTCP commands are
         understood.
         """
-        self.ctcpreply(sender['nick'], 'CLIENTINFO', self.reply_clientinfo)
+        self.ctcpreply(sender.nick, 'CLIENTINFO', self.reply_clientinfo)
     
     def on_CTCP_finger(self, sender, target, arg):
         """This is used to get a user's real name, and perhaps also the idle time
         of the user (this usage has been obsoleted by enhancements to the IRC
         protocol).
         """
-        self.ctcpreply(sender['nick'], 'FINGER', self.reply_finger)
+        self.ctcpreply(sender.nick, 'FINGER', self.reply_finger)
     
     def on_CTCP_ping(self, sender, target, arg):
         """Ping is used to measure the time delay between clients on the IRC
         network.
         The replying client sends back an identical message inside a notice.
         """
-        self.ctcpreply(sender['nick'], 'PING', arg)
+        self.ctcpreply(sender.nick, 'PING', arg)
     
     def on_CTCP_source(self, sender, target, arg):
         """This is used to get information about where to get a copy of the
         client.
         """
-        self.ctcpreply(sender['nick'], 'SOURCE', self.reply_source)
+        self.ctcpreply(sender.nick, 'SOURCE', self.reply_source)
     
     def on_CTCP_time(self, sender, target, arg):
         """Time queries are used to determine what time it is where another
         user's client is running.
         """
         #TODO: allow custom reply.
-        self.ctcpreply(sender['nick'], 'TIME', str(datetime.now())[:19])
+        self.ctcpreply(sender.nick, 'TIME', str(datetime.now())[:19])
     
     def on_CTCP_userinfo(self, sender, target, arg):
         """This is used to transmit a string which is settable by the user (and
         never should be set by the client).
         """
         if self.reply_userinfo:
-            self.ctcpreply(sender['nick'], 'USERINFO', self.reply_userinfo)
+            self.ctcpreply(sender.nick, 'USERINFO', self.reply_userinfo)
     
     def on_CTCP_version(self, sender, target, arg):
         """This is used to get information about the name of the other client and
         the version of it.
         """
-        self.ctcpreply(sender['nick'], 'VERSION', self.reply_version)
+        self.ctcpreply(sender.nick, 'VERSION', self.reply_version)
+        
     
     def on_CTCPREPLY_ping(self, sender, target, arg):
         """Triggered when someone replies to our CTCP ping query.
         """
         pass
+    
     
     #===========================================================================
     # Mode events
