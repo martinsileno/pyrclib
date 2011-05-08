@@ -10,9 +10,9 @@ class EventDispatcher(object):
             'JOIN'       : self.bot._pre_join,
             'KICK'       : self.bot.on_kick,
             'MODE'       : self.bot.on_modechange,
-            'NICK'       : self.bot.on_nickchange,
+            'NICK'       : self.bot._pre_nick,
             'NOTICE'     : self._parse_notice,
-            'PART'       : self.bot.on_part,
+            'PART'       : self.bot._pre_part,
             'PRIVMSG'    : self._parse_privmsg,
             'QUIT'       : self.bot.on_quit,
             'TOPIC'      : self.bot.on_topicchange

@@ -8,12 +8,17 @@ from linereceiver import LineReceiver
 from linesender import LineSender
 from logger import Logger
 
+from channels import Channel
+from user import User
+
 class PyrcBot(object):
     def __init__(self):
         self.delay = 1000
         self.logger = Logger()
         self.is_connected = False
         self.dispatcher = EventDispatcher(self)
+        
+        self.umodesprefix = '~&@%+' #TODO: get this from RPL_ISUPPORT (005)
         
         #User and channel lists
         self.channels = {}
@@ -109,25 +114,66 @@ class PyrcBot(object):
     
     #===========================================================================
     # Raw events
+    # Raw numerics documentation from: http://www.mirc.net/raws/
     #===========================================================================
+    
+    def raw_324(self, channel, modes):
+        """This is returned for a MODE request.
+        """
+        self.channels[channel].modes = modes[1:]
+    
+    def raw_329(self, channel, time):
+        """This is returned as part of a MODE request, 
+        giving you the time the channel was created.
+        """
+        self.channels[channel].creationdate = datetime.fromtimestamp(float(time))
     
     def raw_331(self, channel, msg):
         """This is returned for a TOPIC request if the channel has no current topic.
         On JOIN, if a channel has no topic, this is not returned. 
         Instead, no topic-related replies are returned.
         """
-        pass
+        self.channels[channel].topic.reset()
     
     def raw_332(self, channel, topic):
         """This is returned for a TOPIC request or when you JOIN, 
         if the channel has a topic.
         """
-        pass
+        self.channels[channel].topic.text = topic
     
-    def raw_333(self, *args):
-        pass
+    def raw_333(self, channel, nick, time):
+        """This is returned for a TOPIC request or when you JOIN, 
+        if the channel has a topic.
+        """
+        self.channels[channel].topic.set_by = nick
+        self.channels[channel].topic.date = datetime.fromtimestamp(float(time))
     
-    def raw_353(self, *args):
+    def raw_353(self, bla, channel, names):
+        """This is returned for a NAMES request for a channel, or when you initially 
+        join a channel. It contains a list of every user on the channel.
+        """
+        for name in names.split(' '):
+            if name[0] not in self.umodesprefix:
+                mode = ''
+            else:
+                mode = name[0]
+                st = 1
+                for c in name[1:]:
+                    if c in self.umodesprefix:
+                        mode += c
+                        st += 1
+                    else:
+                        break
+                
+                name = name[st:]
+            
+            self.users[name] = User(name)
+            self.channels[channel].users[name] = mode
+    
+    def raw_366(self, channel, msg):
+        """This is returned at the end of a NAMES list, after all 
+        visible names are returned.
+        """
         pass
     
     def raw_unknown(self, numeric, *args):
@@ -139,10 +185,43 @@ class PyrcBot(object):
     #===========================================================================
     
     def _pre_join(self, user, channel):
+        """Adds the user to the channel user list.
+        """
+        self.users[user.nick] = user
+        if user.nick == self.nick:
+            self.channels[channel] = Channel(channel)
+            self.sender.raw_line('MODE {0}'.format(channel))
         
-        
+        self.channels[channel].users[user.nick] = ''
         self.on_join(user, channel)
     
+    def _pre_part(self, user, channel, reason=None):
+        """Removes the user from the channel user list.
+        """
+        if user.nick == self.nick:
+            del self.channels[channel]
+        else:
+            del self.channels[channel].users[user.nick]
+            # remove him from global user list only if we don't share any chan.
+            if self.get_comchans(user) == []:
+                del self.users[user.nick]
+        
+        self.on_part(user, channel, reason)
+    
+    def _pre_nick(self, user, newnick):
+        """Changes a user's nick.
+        """
+        oldnick = user.nick
+        if oldnick == self.nick:
+            self.nick = newnick
+        
+        for chan in self.get_comchans(user):
+            chan.renameuser(oldnick, newnick)
+        
+        del self.users[oldnick]
+        user.nick = newnick
+        self.users[newnick] = user
+        self.on_nickchange(oldnick, newnick)
     
     #===========================================================================
     # Public events
@@ -414,6 +493,16 @@ class PyrcBot(object):
             s += ' ' + ' '.join(args)
         
         self.sender.raw_line(s)
+    
+    def get_comchans(self, user):
+        """Returns a list of channels our bot and this user are in.
+            """
+        comchans = []
+        for bla, chan in self.channels.items():
+            if user.nick in chan.users:
+                comchans.append(chan)
+        
+        return comchans
     
 ### Connect Exceptions ###
 class ConnectException(BaseException):
