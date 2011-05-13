@@ -10,8 +10,9 @@ class LineSender(LineHandler):
     disconnected from the server for excess flood.
     """
     
-    def __init__(self, bot, socket, delay):
-        LineHandler.__init__(self, bot, socket)
+    def __init__(self, bot, socket, fo, delay):
+        LineHandler.__init__(self, bot, fo)
+        self._socket = socket
         self.delay = delay
         self.queue = deque()
         self.alive = True

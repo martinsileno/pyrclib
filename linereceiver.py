@@ -1,8 +1,8 @@
 from linehandler import LineHandler
 
 class LineReceiver(LineHandler):
-    def __init__(self, bot, socket):
-        LineHandler.__init__(self, bot, socket)
+    def __init__(self, bot, fo):
+        LineHandler.__init__(self, bot, fo)
         
     def _read(self):
         """Read data from socket, stripping CR/LF
@@ -16,7 +16,7 @@ class LineReceiver(LineHandler):
             line = line.decode()
         except UnicodeDecodeError as exc:
             line = line.decode('latin-1')
-                
+        
         if line[-2:] == self._CRLF:
             line = line[:-2]
         

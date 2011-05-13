@@ -54,10 +54,12 @@ class PyrcBot(object):
             except ImportError:
                 raise SSLNotAvailableException()
             s = ssl.wrap_socket(s)
-        self.receiver = LineReceiver(self, s)
+        
+        fo = s.makefile('rb')
+        self.receiver = LineReceiver(self, fo)
         
         # Manually handle connection to the server
-        self.sender = LineSender(self, s, self.delay)
+        self.sender = LineSender(self, s, fo, self.delay)
         
         if password:
             self.sender.raw_line('PASS {0}'.format(password))
@@ -65,7 +67,6 @@ class PyrcBot(object):
         self.sender.raw_line('NICK {0}'.format(self.nick))
         self.sender.raw_line('USER {0} * * :{1}'.format(self.user, self.realname))
         
-        fo = s.makefile('rb')
         while True:
             line = fo.readline()
             if not line:
@@ -75,6 +76,7 @@ class PyrcBot(object):
             if line[-2:] == '\r\n':
                 line = line[:-2]
             
+            self.logger.log(line)
             if line.startswith('PING') or line.startswith('PONG'):
                 self.sender.raw_line('PONG ' + line.split(' ')[1])
                 continue
@@ -87,9 +89,6 @@ class PyrcBot(object):
                 #TODO: change to altnick
                 self.nick += '_'
                 self.sender.raw_line('NICK {0}'.format(self.nick))
-            
-            
-            self.logger.log(line)
         
         self.receiver.start()
         self.sender.start()
