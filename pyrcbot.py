@@ -203,7 +203,7 @@ class PyrcBot(object):
         else:
             del self.channels[channel].users[user.nick]
             # remove him from global user list only if we don't share any chan.
-            if self.get_comchans(user) == []:
+            if self.get_comchans(user.nick) == []:
                 del self.users[user.nick]
         
         self.on_part(user, channel, reason)
@@ -215,13 +215,33 @@ class PyrcBot(object):
         if oldnick == self.nick:
             self.nick = newnick
         
-        for chan in self.get_comchans(user):
+        for chan in self.get_comchans(user.nick):
             chan.renameuser(oldnick, newnick)
         
         del self.users[oldnick]
         user.nick = newnick
         self.users[newnick] = user
         self.on_nickchange(oldnick, newnick)
+    
+    def _pre_kick(self, sender, channel, nick, reason=None):
+        """Removes a user from a channel's user list when he gets kicked.
+        """
+        del self.channels[channel].users[nick]
+        if self.get_comchans(nick) == []:
+            del self.users[nick]
+        
+        self.on_kick(sender, nick, channel, reason)
+        
+    def _pre_quit(self, user, reason=None):
+        """Removes a user from list when he quits.
+        """
+        nick = user.nick
+        del self.users[nick]
+        
+        for chan in self.get_comchans(user.nick):
+            del chan.users[nick]
+        
+        self.on_quit(user, reason)
     
     #===========================================================================
     # Public events
@@ -494,12 +514,12 @@ class PyrcBot(object):
         
         self.sender.raw_line(s)
     
-    def get_comchans(self, user):
+    def get_comchans(self, nick):
         """Returns a list of channels our bot and this user are in.
             """
         comchans = []
         for bla, chan in self.channels.items():
-            if user.nick in chan.users:
+            if nick in chan.users:
                 comchans.append(chan)
         
         return comchans

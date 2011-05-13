@@ -12,6 +12,9 @@ class Channel(object):
         modes = self.users[oldnick]
         del self.users[oldnick]
         self.users[newnick] = modes
+    
+    def __str__(self):
+        return self.name
 
 class Topic(object):
     """Represents a channel topic (text, set_by, date).
@@ -25,3 +28,6 @@ class Topic(object):
         self.text = None
         self.set_by = None
         self.date = None
+    
+    def __str__(self):
+        return self.text

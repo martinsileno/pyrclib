@@ -8,13 +8,13 @@ class EventDispatcher(object):
         self.usermap = {
             'INVITE'     : self.bot.on_invite,
             'JOIN'       : self.bot._pre_join,
-            'KICK'       : self.bot.on_kick,
+            'KICK'       : self.bot._pre_kick,
             'MODE'       : self.bot.on_modechange,
             'NICK'       : self.bot._pre_nick,
             'NOTICE'     : self._parse_notice,
             'PART'       : self.bot._pre_part,
             'PRIVMSG'    : self._parse_privmsg,
-            'QUIT'       : self.bot.on_quit,
+            'QUIT'       : self.bot._pre_quit,
             'TOPIC'      : self.bot.on_topicchange
             }
         
