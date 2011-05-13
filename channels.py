@@ -5,6 +5,7 @@ class Channel(object):
         self.name = name
         self.users = {}
         self.topic = Topic()
+        self.modes = ''
     
     def renameuser(self, oldnick, newnick):
         """Called when a user changes nick.
@@ -14,7 +15,7 @@ class Channel(object):
         self.users[newnick] = modes
     
     def __str__(self):
-        return self.name
+        return '{0} [+{1}]'.format(self.name, self.modes)
 
 class Topic(object):
     """Represents a channel topic (text, set_by, date).

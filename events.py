@@ -34,6 +34,8 @@ class EventDispatcher(object):
             'PING'       : self.bot.on_CTCPREPLY_ping}
         
         self.rawsmap = {
+            '324': self.bot.raw_324,
+            '329': self.bot.raw_329,
             '331': self.bot.raw_331,
             '332': self.bot.raw_332,
             '333': self.bot.raw_333,
