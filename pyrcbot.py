@@ -1,6 +1,8 @@
+import re
 import socket
 import time
 from datetime import datetime
+from operator import itemgetter
 
 from events import EventDispatcher
 import ircconstants as const
@@ -17,8 +19,7 @@ class PyrcBot(object):
         self.logger = Logger()
         self.is_connected = False
         self.dispatcher = EventDispatcher(self)
-        
-        self.umodesprefix = '~&@%+' #TODO: get this from RPL_ISUPPORT (005)
+        self.protocol = {}
         
         #User and channel lists
         self.channels = {}
@@ -116,6 +117,135 @@ class PyrcBot(object):
     # Raw numerics documentation from: http://www.mirc.net/raws/
     #===========================================================================
     
+    def raw_005(self, nick, *params):
+        """Parse RPL_ISUPPORT (numeric 005) to understand this IRCd's protocol
+        implementation. Otherwise, our client would fail to interpret server 
+        replies or modes changes.
+        
+        Referenced document: http://www.irc.org/tech_docs/005.html
+        """
+        for par in params[:-1]:
+            param, sep, value = par.partition('=')
+            if param == 'PREFIX':
+                #A list of channel modes a person can get and the respective
+                #prefix a channel or nickname will get in case the person has it.
+                #The order of the modes goes from most powerful to least powerful.
+                #Those prefixes are shown in the output of the WHOIS, WHO and 
+                #NAMES command. 
+                regex = re.compile('\((\w+)\)(.*)')
+                r = regex.search(value)
+                modes, symbols = r.groups()
+                zipped = zip(modes, symbols)
+                self.protocol['prefixes'] = list(zipped)
+            elif param == 'CHANTYPES':
+                #The supported channel prefixes.
+                self.protocol['chantypes'] = value
+            elif param == 'CHANMODES':
+                #This is a list of channel modes according to 4 types. 
+                #  self.modes_target
+                #    Mode that adds or removes a nick or address to a list. 
+                #    Always has a parameter.
+                #  self.modes_param
+                #    Mode that changes a setting and always has a parameter.
+                #  self.modes_setparam
+                #    Mode that changes a setting and only has a parameter when set.
+                #  self.modes_noparam
+                #    Mode that changes a setting and never has a parameter.
+                (self.protocol['modes_target'], self.protocol['modes_param'], 
+                self.protocol['modes_setparam'], self.protocol['modes_noparam']) = value.split(',')
+            elif param == 'MODES':
+                #Maximum number of channel modes with parameter allowed per 
+                #MODE command.
+                self.protocol['maxmodes'] = int(value)
+            elif param == 'NICKLEN':
+                #Maximum nickname length.
+                self.protocol['maxnicklength'] = int(value)
+            elif param == 'NETWORK':
+                #The IRC network name.
+                self.network = value
+            elif param == 'EXCEPTS':
+                #The server support ban exceptions (e mode). 
+                #See RFC 2811 for more information.
+                self.protocol['supports_excepts'] = True
+            elif param == 'INVEX':
+                #The server support invite exceptions (+I mode). 
+                #See RFC 2811 for more information.
+                self.protocol['supports_invex'] = True
+            elif param == 'WALLCHOPS':
+                #The server supports messaging channel operators
+                self.protocol['wallchops'] = True
+            elif param == 'WALLVOICES':
+                #Notice to +#channel goes to all voiced persons.
+                self.protocol['wallvoices'] = True
+            elif param == 'STATUSMSG':
+                #The server supports messaging channel member
+                #who have a certain status or higher. 
+                #The status is one of the letters from PREFIX.
+                self.protocol['statusmsg'] = value
+            elif param == 'CASEMAPPING':
+                #Case mapping used for nick- and channel name comparing.
+                self.protocol['casemapping'] = value
+            elif param == 'ELIST':
+                #The server supports extentions for the LIST command.
+                #The tokens specify which extention are supported. 
+                self.protocol['elist'] = value
+            elif param == 'TOPICLEN':
+                #Maximum topic length.
+                self.protocol['topiclen'] = int(value)
+            elif param == 'KICKLEN':
+                #Maximum kick comment length.
+                self.protocol['kicklen'] = int(value)
+            elif param == 'CHANNELLEN':
+                #Maximum channel name length.
+                self.protocol['channellen'] = int(value)
+            elif param == 'SILENCE':
+                #The server support the SILENCE command. 
+                #The number is the maximum number of allowed entries in the list. 
+                self.protocol['max_silencelist'] = int(value)
+            elif param == 'RFC2812':
+                #Server supports RFC 2812 features.
+                self.protocol['rfc2812'] = True
+            elif param == 'PENALTY':
+                #Server gives extra penalty to some commands instead of the normal 
+                #2 seconds per message and 1 second for every 120 bytes in a message.
+                self.protocol['penalty'] = True
+            elif param == 'FNC':
+                #Forced nick changes: The server may change the nickname without 
+                #the client sending a NICK message.
+                self.protocol['fnc'] = True
+            elif param == 'SAFELIST':
+                #The LIST is sent in multiple iterations so send queue won't fill 
+                #and kill the client connection.
+                self.protocol['safelist'] = True
+            elif param == 'AWAYLEN':
+                #The max length of an away message.
+                self.protocol['awaylen'] = int(value)
+            elif param == 'USERIP':
+                #The USERIP command exists.
+                self.protocol['userip'] = True
+            elif param == 'CPRIVMSG':
+                #The CPRIVMSG command exists, used for mass messaging people in 
+                #specified channel (CPRIVMSG channel nick,nick2,... :text)
+                self.protocol['cprivmsg'] = True
+            elif param == 'CNOTICE':
+                #The CNOTICE command exists, just like CPRIVMSG.
+                self.protocol['cnotice'] = True
+            elif param == 'MAXNICKLEN':
+                #Maximum length of nicks the server will send to the client?
+                self.protocol['maxnicklen'] = int(value)
+            elif param == 'MAXTARGETS':
+                #Maximum targets allowed for PRIVMSG and NOTICE commands.
+                self.protocol['maxtargets'] = int(value)
+            elif param == 'KNOCK':
+                #The KNOCK command exists.
+                self.protocol['knock'] = True
+            elif param == 'WHOX':
+                #The WHO command uses WHOX protocol.
+                self.protocol['whox'] = True
+            elif param == 'CALLERID':
+                #The server supports server side ignores via the +g user mode.
+                self.protocol['callerid'] = True 
+    
     def raw_324(self, channel, modes):
         """This is returned for a MODE request.
         """
@@ -151,14 +281,15 @@ class PyrcBot(object):
         """This is returned for a NAMES request for a channel, or when you initially 
         join a channel. It contains a list of every user on the channel.
         """
+        prefixes = map(itemgetter(1), self.protocol['prefixes'])
         for name in names.split(' '):
-            if name[0] not in self.umodesprefix:
+            if name[0] not in prefixes:
                 mode = ''
             else:
                 mode = name[0]
                 st = 1
                 for c in name[1:]:
-                    if c in self.umodesprefix:
+                    if c in prefixes:
                         mode += c
                         st += 1
                     else:
