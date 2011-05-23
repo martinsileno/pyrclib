@@ -5,7 +5,6 @@ from datetime import datetime
 from operator import itemgetter
 
 from events import EventDispatcher
-import ircconstants as const
 from linereceiver import LineReceiver
 from linesender import LineSender
 from logger import Logger
@@ -83,10 +82,10 @@ class PyrcBot(object):
                 continue
             
             srv, code, me, msg = line.split(' ', 3)
-            if code == const.RPL_MYINFO:
+            if code == '005':
                 self.is_connected = True
                 break # Successful connection
-            elif code == const.ERR_NICKNAMEINUSE:
+            elif code == '433':
                 #TODO: change to altnick
                 self.nick += '_'
                 self.sender.raw_line('NICK {0}'.format(self.nick))
