@@ -5,7 +5,7 @@ class Channel(object):
         self.name = name
         self.users = {}
         self.topic = Topic()
-        self.modes = ''
+        self.modes = '' #TODO: needs a better way to store modes, what if the channel has a key/limit?
     
     def renameuser(self, oldnick, newnick):
         """Called when a user changes nick.

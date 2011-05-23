@@ -142,14 +142,14 @@ class PyrcBot(object):
                 self.protocol['chantypes'] = value
             elif param == 'CHANMODES':
                 #This is a list of channel modes according to 4 types. 
-                #  self.modes_target
+                #  modes_target
                 #    Mode that adds or removes a nick or address to a list. 
                 #    Always has a parameter.
-                #  self.modes_param
+                #  modes_param
                 #    Mode that changes a setting and always has a parameter.
-                #  self.modes_setparam
+                #  modes_setparam
                 #    Mode that changes a setting and only has a parameter when set.
-                #  self.modes_noparam
+                #  modes_noparam
                 #    Mode that changes a setting and never has a parameter.
                 (self.protocol['modes_target'], self.protocol['modes_param'], 
                 self.protocol['modes_setparam'], self.protocol['modes_noparam']) = value.split(',')
@@ -281,7 +281,7 @@ class PyrcBot(object):
         """This is returned for a NAMES request for a channel, or when you initially 
         join a channel. It contains a list of every user on the channel.
         """
-        prefixes = map(itemgetter(1), self.protocol['prefixes'])
+        prefixes = list(map(itemgetter(1), self.protocol['prefixes']))
         for name in names.split(' '):
             if name[0] not in prefixes:
                 mode = ''
@@ -373,6 +373,36 @@ class PyrcBot(object):
         
         self.on_quit(user, reason)
     
+    def _set_prefix(self, channel, m, target):
+        """Adds a prefix (like op, voice etc.) to a user in a channel.
+        """
+        s = dict(self.protocol['prefixes'])[m]
+        self.channels[channel].users[target] += s
+    
+    def _unset_prefix(self, channel, m, target):
+        """Removes a prefix (like op, voice etc.) from a user in a channel.
+        """
+        s = dict(self.protocol['prefixes'])[m]
+        current = self.channels[channel].users[target]
+        self.channels[channel].users[target] = current.replace(s, '')
+    
+    def _pre_set_mode(self, user, channel, mode, target=None):
+        """Syncs channels modes with mode changes.
+        """
+        if mode not in map(itemgetter(0), self.protocol['prefixes']):
+            self.channels[channel].modes += mode
+        
+        self.on_set_mode(user, channel, mode, target)
+    
+    def _pre_unset_mode(self, user, channel, mode, target=None):
+        """Syncs channels modes with mode changes.
+        """
+        if mode not in map(itemgetter(0), self.protocol['prefixes']):
+            current = self.channels[channel].modes
+            self.channels[channel].modes = current.replace(mode, '')
+        
+        self.on_unset_mode(user, channel, mode, target)
+    
     #===========================================================================
     # Public events
     #
@@ -439,6 +469,16 @@ class PyrcBot(object):
         """
         pass
     
+    def on_set_mode(self, user, channel, mode, target=None):
+        """Called when a mode is set.
+        """
+        pass
+    
+    def on_unset_mode(self, user, channel, mode, target=None):
+        """Called when a mode is unset.
+        """
+        pass
+    
     #===========================================================================
     # -- CTCP events -- #
     # All CTCP descriptions are taken from:
@@ -500,19 +540,8 @@ class PyrcBot(object):
         pass
     
     
-    #===========================================================================
-    # Mode events
-    #===========================================================================
-        
-    def on_modechange(self, *args):
-        """Called whenever a mode is changed.
-        Subclasses should override this method to call appropriate events
-        for their server's IRCd.
-        See also: ticket #4.
-        """
-        pass
-
     ### IRC Commands ###
+    
     def join(self, channel, key=None):
         """Joins a channel with an optional key.
         This method must not be overridden.

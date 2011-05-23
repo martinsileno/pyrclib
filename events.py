@@ -9,7 +9,7 @@ class EventDispatcher(object):
             'INVITE'     : self.bot.on_invite,
             'JOIN'       : self.bot._pre_join,
             'KICK'       : self.bot._pre_kick,
-            'MODE'       : self.bot.on_modechange,
+            'MODE'       : self._parse_mode,
             'NICK'       : self.bot._pre_nick,
             'NOTICE'     : self._parse_notice,
             'PART'       : self.bot._pre_part,
@@ -41,6 +41,10 @@ class EventDispatcher(object):
             '332': self.bot.raw_332,
             '333': self.bot.raw_333,
             '353': self.bot.raw_353,
+            }
+        
+        self.modesmap = {
+            
             }
     
     def _parse_privmsg(self, sender, target, message):
@@ -76,6 +80,42 @@ class EventDispatcher(object):
                 self.ctcpreplymap[command](sender, target, arg)
         else:
             self.bot.on_notice(sender, target, message)
+    
+    def _parse_mode(self, user, channel, modes, *params):
+        """Parse a modes string and call the appropriate event.
+        """
+        if channel == self.bot.nick:
+            return #TODO: We should also keep track of our user modes!
+        
+        modes_param = self.bot.protocol['modes_param']
+        modes_setparam = self.bot.protocol['modes_setparam']
+        modes_target = self.bot.protocol['modes_target']
+        prefixes = dict(self.bot.protocol['prefixes'])
+        params = list(params)
+        
+        for m in modes:
+            if m == '+':
+                adding = True
+            elif m == '-':
+                adding = False
+            else:
+                if m in modes_param or m in prefixes or (m in modes_setparam and adding):
+                    target = params.pop(0)
+                elif m in modes_target:
+                    target = params.pop(0)
+                    n, u, h = [target.split('!')[0]] + target.split('!')[1].split('@')
+                    target = User(n, u, h)
+                else:
+                    target = None
+                    
+                if adding:
+                    if m in prefixes:
+                        self.bot._set_prefix(channel, m, target)
+                    self.bot._pre_set_mode(user, channel, m, target)
+                else:
+                    if m in prefixes:
+                        self.bot._unset_prefix(channel, m, target)
+                    self.bot._pre_unset_mode(user, channel, m, target)
     
     def _parsemsg(self, s):
         """Breaks a message from an IRC server into its prefix, command, and arguments.
