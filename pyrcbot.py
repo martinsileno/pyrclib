@@ -361,6 +361,14 @@ class PyrcBot(object):
             del self.users[nick]
         
         self.on_kick(sender, nick, channel, reason)
+    
+    def _pre_kill(self, killer, victim, message):
+        """We were killed by someone, disconnect.
+        """
+        if victim == self.nick: # is this really needed?
+            self.receiver.disconnect()
+        
+        self.on_kill(killer, victim, message)
         
     def _pre_quit(self, user, reason=None):
         """Removes a user from list when he quits.
@@ -469,6 +477,11 @@ class PyrcBot(object):
         """
         pass
     
+    def on_kill(self, killer, victim, message):
+        """Some evil user killed us.
+        """
+        pass
+        
     def on_set_mode(self, user, channel, mode, target=None):
         """Called when a mode is set.
         """
@@ -476,6 +489,11 @@ class PyrcBot(object):
     
     def on_unset_mode(self, user, channel, mode, target=None):
         """Called when a mode is unset.
+        """
+        pass
+    
+    def on_unknown(self, *args):
+        """An unknown event happened! We don't know how to process it.
         """
         pass
     

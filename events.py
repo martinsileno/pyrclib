@@ -15,7 +15,8 @@ class EventDispatcher(object):
             'PART'       : self.bot._pre_part,
             'PRIVMSG'    : self._parse_privmsg,
             'QUIT'       : self.bot._pre_quit,
-            'TOPIC'      : self.bot.on_topicchange
+            'TOPIC'      : self.bot.on_topicchange,
+            'KILL'       : self.bot._pre_kill
             }
         
         self.ctcpmap = {

@@ -23,7 +23,8 @@ class LineReceiver(LineHandler):
         return line
     
     def disconnect(self):
-        self._socket.close()
+        if hasattr(self, '_socket'):
+            self._socket.close()
         self._bot.sender.stop()
         self._bot.is_connected = False
         self._bot.on_disconnect()
