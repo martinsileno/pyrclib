@@ -1,4 +1,4 @@
-from user import User
+from pyrclib.user import User
 
 class EventDispatcher(object):
     """

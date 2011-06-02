@@ -4,13 +4,13 @@ import time
 from datetime import datetime
 from operator import itemgetter
 
-from events import EventDispatcher
-from linereceiver import LineReceiver
-from linesender import LineSender
-from logger import Logger
+from pyrclib.events import EventDispatcher
+from pyrclib.linereceiver import LineReceiver
+from pyrclib.linesender import LineSender
+from pyrclib.logger import Logger
 
-from channels import Channel
-from user import User
+from pyrclib.channels import Channel
+from pyrclib.user import User
 
 class IRCBot(object):
     def __init__(self):

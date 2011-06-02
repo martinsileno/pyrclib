@@ -12,7 +12,7 @@ setup(name='pyrclib',
       author_email='martin@1way.it',
       license='MIT',
       url='http://trac.1way.it/',
-      packages=['.', 'utils'],
+      packages=['pyrclib'],
       classifiers=[
             'Intended Audience :: Developers',
             'Programming Language :: Python',
