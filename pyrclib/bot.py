@@ -14,6 +14,7 @@ from pyrclib.user import User
 
 class IRCBot(object):
     def __init__(self):
+        self.version = '0.2.0'
         self.delay = 1000
         self.logger = Logger()
         self.is_connected = False
