@@ -5,8 +5,8 @@ from distutils.core import setup
 # python setup.py install
 #===============================================================================
 
-setup(name='Pyrcbot',
-      version='0.1.0',
+setup(name='pyrclib',
+      version='0.2.0a2',
       description='Python IRC bot framework',
       author='Marco Mugnai',
       author_email='martin@1way.it',

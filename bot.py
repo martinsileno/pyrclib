@@ -12,7 +12,7 @@ from logger import Logger
 from channels import Channel
 from user import User
 
-class PyrcBot(object):
+class IRCBot(object):
     def __init__(self):
         self.version = '0.2.0a1'
         self.delay = 1000
@@ -30,7 +30,7 @@ class PyrcBot(object):
         self.reply_finger = 'Don\'t finger me, pervert!'
         self.reply_source = 'http://trac.1way.it/'
         self.reply_userinfo = ''
-        self.reply_version = 'Pyrcbot v' + self.version
+        self.reply_version = 'pyrclib v' + self.version
     
     def connect(self, address, port=6667, password=None, useSSL=False):
         """Connect to the specified IRC server.
