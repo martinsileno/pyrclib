@@ -10,7 +10,7 @@ from pyrclib.linesender import LineSender
 from pyrclib.logger import Logger
 
 from pyrclib.channels import Channel
-from pyrclib.user import User
+from pyrclib.user import User, get_user_from_mask
 
 class IRCBot(object):
     def __init__(self):
@@ -274,7 +274,7 @@ class IRCBot(object):
         """This is returned for a TOPIC request or when you JOIN, 
         if the channel has a topic.
         """
-        self.channels[channel].topic.set_by = nick
+        self.channels[channel].topic.set_by = get_user_from_mask(nick)
         self.channels[channel].topic.date = datetime.fromtimestamp(float(time))
     
     def raw_353(self, bla, channel, names):
@@ -380,6 +380,15 @@ class IRCBot(object):
             del chan.users[nick]
         
         self.on_quit(user, reason)
+    
+    def _pre_topic(self, sender, channel, newtopic):
+        """Topic tracking.
+        """
+        self.channels[channel].topic.text = newtopic
+        self.channels[channel].topic.set_by = sender
+        self.channels[channel].topic.date = datetime.now()
+        
+        self.on_topicchange(sender, channel, newtopic)
     
     def _set_prefix(self, channel, m, target):
         """Adds a prefix (like op, voice etc.) to a user in a channel.

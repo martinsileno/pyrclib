@@ -15,7 +15,7 @@ class EventDispatcher(object):
             'PART'       : self.bot._pre_part,
             'PRIVMSG'    : self._parse_privmsg,
             'QUIT'       : self.bot._pre_quit,
-            'TOPIC'      : self.bot.on_topicchange,
+            'TOPIC'      : self.bot._pre_topic,
             'KILL'       : self.bot._pre_kill
             }
         
@@ -142,11 +142,11 @@ class EventDispatcher(object):
         prefix, command, args = self._parsemsg(line)
         if '!' in prefix and '@' in prefix:
             nick, h = prefix.split('!', 1)
-            ident, host = h.split('@', 1)
             
             if nick in self.bot.users:
                 sender = self.bot.users[nick]
             else:
+                ident, host = h.split('@', 1)
                 sender = User(nick, ident, host)
             
             if command in self.usermap:
