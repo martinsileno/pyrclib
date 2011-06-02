@@ -14,7 +14,6 @@ from pyrclib.user import User
 
 class IRCBot(object):
     def __init__(self):
-        self.version = '0.2.0a1'
         self.delay = 1000
         self.logger = Logger()
         self.is_connected = False
@@ -83,7 +82,7 @@ class IRCBot(object):
                 continue
             
             srv, code, me, msg = line.split(' ', 3)
-            if code == '005':
+            if code == '001':
                 self.is_connected = True
                 break # Successful connection
             elif code == '433':
@@ -117,7 +116,7 @@ class IRCBot(object):
     # Raw numerics documentation from: http://www.mirc.net/raws/
     #===========================================================================
     
-    def raw_005(self, nick, *params):
+    def raw_005(self, *params):
         """Parse RPL_ISUPPORT (numeric 005) to understand this IRCd's protocol
         implementation. Otherwise, our client would fail to interpret server 
         replies or modes changes.

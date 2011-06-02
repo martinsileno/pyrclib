@@ -6,7 +6,7 @@ from distutils.core import setup
 #===============================================================================
 
 setup(name='pyrclib',
-      version='0.2.0a2',
+      version='0.2.0a3',
       description='Python IRC bot framework',
       author='Marco Mugnai',
       author_email='martin@1way.it',
