@@ -1,23 +1,19 @@
 import re
-import socket
 import time
 from datetime import datetime
 from operator import itemgetter
 
+from pyrclib.connection import IRCConnection
 from pyrclib.events import EventDispatcher
-from pyrclib.linereceiver import LineReceiver
-from pyrclib.linesender import LineSender
-from pyrclib.logger import Logger
 
 from pyrclib.channels import Channel
 from pyrclib.user import User, get_user_from_mask
 
-class IRCBot(object):
+class IRCBot(IRCConnection):
     def __init__(self):
+        IRCConnection.__init__(self, self.nick, self.user, self.realname)
         self.version = '0.2.0'
         self.delay = 1000
-        self.logger = Logger()
-        self.is_connected = False
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}
         
@@ -32,75 +28,6 @@ class IRCBot(object):
         self.reply_userinfo = ''
         self.reply_version = 'pyrclib v' + self.version
     
-    def connect(self, address, port=6667, password=None, useSSL=False):
-        """Connect to the specified IRC server.
-        - address: the address of the server
-        - port: port of the server, defaults to 6667
-        - password: if a password is required to connect
-        - useSSL: use a secure connection with SSL
-        """
-        self.server = address
-        if self.is_connected:
-            raise AlreadyConnectedException()
-        
-        self.logger.log('Connecting to server: {0}'.format(address))
-        
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((address, port)) # TODO: Exceptions?
-        
-        # Using SSL?
-        if useSSL:
-            try:
-                import ssl
-            except ImportError:
-                raise SSLNotAvailableException()
-            s = ssl.wrap_socket(s)
-        
-        fo = s.makefile('rb')
-        self.receiver = LineReceiver(self, fo)
-        
-        # Manually handle connection to the server
-        self.sender = LineSender(self, s, fo, self.delay)
-        
-        if password:
-            self.sender.raw_line('PASS {0}'.format(password))
-        
-        self.sender.raw_line('NICK {0}'.format(self.nick))
-        self.sender.raw_line('USER {0} * * :{1}'.format(self.user, self.realname))
-        
-        while True:
-            line = fo.readline()
-            if not line:
-                break
-            
-            line = line.decode()
-            if line[-2:] == '\r\n':
-                line = line[:-2]
-            
-            self.logger.log(line)
-            if line.startswith('PING') or line.startswith('PONG'):
-                self.sender.raw_line('PONG ' + line.split(' ')[1])
-                continue
-            
-            srv, code, me, msg = line.split(' ', 3)
-            if code == '001':
-                self.is_connected = True
-                break # Successful connection
-            elif code == '433':
-                #TODO: change to altnick
-                self.nick += '_'
-                self.sender.raw_line('NICK {0}'.format(self.nick))
-        
-        self.receiver.start()
-        self.sender.start()
-    
-    def disconnect(self, quitmsg=None):
-        """Disconnect from the server with an optional quit message.
-        The on_disconnect event will be called when done.
-        """
-        self.sender.raw_line('QUIT :{0}'.format(quitmsg if quitmsg else ''))
-        self.receiver.disconnect()
-        
     def line_received(self, line):
         """Called on every line received from the server.
         This method must not be overridden.
@@ -709,22 +636,3 @@ class IRCBot(object):
                 comchans.append(chan)
         
         return comchans
-    
-### Connect Exceptions ###
-class ConnectException(BaseException):
-    def __init__(self, msg=None):
-        if not msg:
-            self.msg = 'An exception occurred connecting to the IRC server.'
-        else:
-            self.msg = msg
-    def __str__(self):
-        return repr(self.msg)
-
-class AlreadyConnectedException(ConnectException):
-    def __init__(self):
-        self.msg = 'Already connected to a server. Disconnect before trying a \
-        new connection.'
-
-class SSLNotAvailableException(ConnectException):
-    def __init__(self):
-        self.msg = 'SSL module is not available.'
