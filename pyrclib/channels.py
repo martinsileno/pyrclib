@@ -1,3 +1,5 @@
+from pyrclib.user import User
+
 class Channel(object):
     """Represents a channel we are in.
     """
@@ -16,6 +18,19 @@ class Channel(object):
     
     def __str__(self):
         return '{0} [+{1}]'.format(self.name, self.modes)
+    
+    def __contains__(self, item):
+        if isinstance(item, User):
+            if item.nick in self.users:
+                return True
+            return False
+        
+        for user in self.users.keys():
+            if user.lower() == item.lower():
+                return True
+        
+        return False
+        
 
 class Topic(object):
     """Represents a channel topic (text, set_by, date).

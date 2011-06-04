@@ -10,8 +10,8 @@ from pyrclib.channels import Channel
 from pyrclib.user import User, get_user_from_mask
 
 class IRCBot(IRCConnection):
-    def __init__(self):
-        IRCConnection.__init__(self, self.nick, self.user, self.realname)
+    def __init__(self, nick, user, realname):
+        IRCConnection.__init__(self, nick, user, realname)
         self.version = '0.2.0'
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
