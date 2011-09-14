@@ -173,9 +173,9 @@ class IRCBot(IRCConnection):
                 #The server supports server side ignores via the +g user mode.
                 self.protocol['callerid'] = True 
     
-    def raw_324(self, channel, modes):
+    def raw_324(self, channel, modes, args=None):
         """This is returned for a MODE request.
-        """
+        """ # TEMPORARY: we are currently ignoring modes parameters!
         self.channels[channel].modes = modes[1:]
     
     def raw_329(self, channel, time):
