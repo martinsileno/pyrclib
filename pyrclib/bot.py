@@ -201,7 +201,8 @@ class IRCBot(IRCConnection):
         """This is returned for a TOPIC request or when you JOIN, 
         if the channel has a topic.
         """
-        self.channels[channel].topic.set_by = get_user_from_mask(nick)
+        if '!' and '@' in nick: # sometimes it's just a nick and not a full nick!user@host
+            self.channels[channel].topic.set_by = get_user_from_mask(nick)
         self.channels[channel].topic.date = datetime.fromtimestamp(float(time))
     
     def raw_353(self, bla, channel, names):
