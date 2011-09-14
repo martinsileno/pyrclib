@@ -76,6 +76,7 @@ class IRCConnection(object):
         
         self.receiver.start()
         self.sender.start()
+        self.on_connect()
     
     def disconnect(self, quitmsg=None):
         """Disconnect from the server with an optional quit message.
@@ -85,6 +86,11 @@ class IRCConnection(object):
         self.receiver.disconnect()
     
     def on_disconnect(self):
+        """Overridden by IRCBot/client.
+        """
+        pass
+    
+    def on_connect(self):
         """Overridden by IRCBot/client.
         """
         pass
