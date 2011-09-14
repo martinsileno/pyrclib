@@ -1,8 +1,10 @@
+from datetime import datetime
+
 class Logger(object):
-    L_ERROR = 0
-    L_WARNING = 1
-    L_MESSAGE = 2
-    L_COMMAND = 3
+#    L_ERROR = 0
+#    L_WARNING = 1
+#    L_MESSAGE = 2
+#    L_COMMAND = 3
     
     def __init__(self):
         pass
@@ -13,4 +15,4 @@ class Logger(object):
         
         #TODO: log to file
         #TODO: different log levels, command, debug, error etc...
-        print(line)
+        print('%s %s' % (str(datetime.now())[:19], line))
