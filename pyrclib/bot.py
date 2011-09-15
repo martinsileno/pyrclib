@@ -1,5 +1,6 @@
 import re
 import time
+from collections import deque
 from datetime import datetime
 from operator import itemgetter
 
@@ -16,6 +17,9 @@ class IRCBot(IRCConnection):
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}
+        
+        #Used to queue /WHO requests
+        self.pending_who = deque()
         
         #User and channel lists
         self.channels = {}
@@ -173,6 +177,13 @@ class IRCBot(IRCConnection):
                 #The server supports server side ignores via the +g user mode.
                 self.protocol['callerid'] = True 
     
+    def raw_315(self, channel, endofwho):
+        """This is sent at the end of a WHO request.
+        """
+        self.pending_who.popleft() # Oldest /WHO done, remove it
+        if len(self.pending_who) > 0: # Other /WHO request(s) waiting, send the oldest one
+            self.sender.raw_line('WHO {0}'.format(self.pending_who[0]))
+    
     def raw_324(self, channel, modes, args=None):
         """This is returned for a MODE request.
         """ # TEMPORARY: we are currently ignoring modes parameters!
@@ -204,6 +215,17 @@ class IRCBot(IRCConnection):
         if '!' and '@' in nick: # sometimes it's just a nick and not a full nick!user@host
             self.channels[channel].topic.set_by = get_user_from_mask(nick)
         self.channels[channel].topic.date = datetime.fromtimestamp(float(time))
+    
+    def raw_352(self, chan, ident, host, server, nick, status, hopsname):
+        """This is returned by a WHO request, one line for each user that is matched.
+        """
+        hops, realname = hopsname.split(' ', 1)
+        self.users[nick].ident = ident
+        self.users[nick].host = host
+        self.users[nick].realname = realname
+        # TODO: parse flags: 
+        # - away status
+        # - ircop status
     
     def raw_353(self, bla, channel, names):
         """This is returned for a NAMES request for a channel, or when you initially 
@@ -244,11 +266,14 @@ class IRCBot(IRCConnection):
     
     def _pre_join(self, user, channel):
         """Adds the user to the channel user list.
+        If we are joining a channel, add this channel to ours, send a MODE request
+        to get the channel modes and a WHO request to get ident/host of unknown users.
         """
         self.users[user.nick] = user
         if user.nick == self.nick:
             self.channels[channel] = Channel(channel)
             self.sender.raw_line('MODE {0}'.format(channel))
+            self.request_who(channel)
         
         self.channels[channel].users[user.nick] = ''
         self.on_join(user, channel)
@@ -639,6 +664,13 @@ class IRCBot(IRCConnection):
         
         self.sender.raw_line(s)
     
+    def request_who(self, target):
+        """Puts a /WHO request in a queue. Sends it if the queue is empty.
+        """
+        self.pending_who.append(target)
+        if len(self.pending_who) == 1:
+            self.sender.raw_line('WHO {0}'.format(target))
+        
     def get_comchans(self, nick):
         """Returns a list of channels our bot and this user are in.
             """

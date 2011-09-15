@@ -1,10 +1,11 @@
 class User(object):
     """Represents a user on IRC.
     """
-    def __init__(self, nick, ident=None, host=None):
+    def __init__(self, nick, ident=None, host=None, realname=None):
         self.nick = nick
         self.ident = ident
         self.host = host
+        self.realname = realname
     
     def __str__(self):
         return '{}!{}@{}'.format(self.nick, self.ident, self.host)

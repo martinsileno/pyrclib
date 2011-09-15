@@ -36,11 +36,13 @@ class EventDispatcher(object):
         
         self.rawsmap = {
             '005': self.bot.raw_005,
+            '315': self.bot.raw_315,
             '324': self.bot.raw_324,
             '329': self.bot.raw_329,
             '331': self.bot.raw_331,
             '332': self.bot.raw_332,
             '333': self.bot.raw_333,
+            '352': self.bot.raw_352,
             '353': self.bot.raw_353,
             }
         
