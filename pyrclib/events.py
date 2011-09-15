@@ -65,7 +65,11 @@ class EventDispatcher(object):
                 if command in self.ctcpmap:
                     self.ctcpmap[command](sender, target, arg)
         else:
-            self.bot.on_privmsg(sender, target, message)
+            self.bot.on_privmsg(sender, target, message) # DISABLE in 0.3.0
+            if target == self.bot.nick:
+                self.bot.on_private_message(sender, message)
+            else:
+                self.bot.on_channel_message(sender, target, message)
     
     def _parse_notice(self, sender, target, message):
         """Not all NOTICEs will trigger the on_notice event,

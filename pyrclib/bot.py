@@ -12,7 +12,7 @@ from pyrclib.user import User, get_user_from_mask
 class IRCBot(IRCConnection):
     def __init__(self, nick, user, realname):
         IRCConnection.__init__(self, nick, user, realname)
-        self.version = '0.2.0'
+        self.version = '0.2.1'
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}
@@ -365,7 +365,18 @@ class IRCBot(IRCConnection):
         self.sender.raw_line('PONG ' + self.nick)
     
     def on_privmsg(self, sender, channel, message):
+        """Called when a message is received.
+        DON'T USE, USE on_channel_message or on_private_message
+        """
+        pass
+    
+    def on_channel_message(self, sender, channel, message):
         """Called when a channel message is received.
+        """
+        pass
+    
+    def on_private_message(self, sender, message):
+        """Called when a private message is received.
         """
         pass
     
