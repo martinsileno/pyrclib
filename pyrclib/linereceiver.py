@@ -36,6 +36,7 @@ class LineReceiver(LineHandler):
             if not line:
                 #Connection was dropped, disconnect
                 self.disconnect()
+                break
             
             try:
                 self._bot.logger.log(line)
