@@ -8,7 +8,7 @@ from operator import itemgetter
 from pyrclib.channels import Channel
 from pyrclib.connection import IRCConnection
 from pyrclib.events import EventDispatcher
-from pyrclib.user import User, get_user_from_mask
+from pyrclib.user import User
 
 
 class IRCBot(IRCConnection):
@@ -19,7 +19,7 @@ class IRCBot(IRCConnection):
             level=logging.INFO,
         )
         IRCConnection.__init__(self, nick, user, realname)
-        self.version = '0.2.4'
+        self.version = '0.2.5'
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}
@@ -229,7 +229,7 @@ class IRCBot(IRCConnection):
         """
         if '!' and '@' in nick:
             # sometimes it's just a nick and not a full nick!user@host
-            self.channels[channel].topic.set_by = get_user_from_mask(nick)
+            self.channels[channel].topic.set_by = User.from_mask(nick)
         self.channels[channel].topic.date = datetime.fromtimestamp(float(time))
 
     def raw_352(self, chan, ident, host, server, nick, status, hopsname):
