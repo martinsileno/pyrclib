@@ -7,4 +7,4 @@ config.ini
 build/*
 dist/*
 .settings/*
-
+.idea/*
