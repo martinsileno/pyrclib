@@ -1,10 +1,7 @@
 syntax:glob
 *.pyc
-.project
-.pydevproject
-config.ini
-*testbot.py
 build/*
 dist/*
 .settings/*
 .idea/*
+pyrclib/__pycache__/*
