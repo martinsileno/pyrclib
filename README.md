@@ -10,7 +10,11 @@ pyrclib is a Python 3 IRC library. It can be used to make IRC bots, clients and 
 
 ### Installation ###
 
-To install just extract the files and run setup.py.
+You can install the module using `pip`
+
+```pip install pyrclib```
+
+Or you can download the files and run setup.py
 
 ```python setup.py install```
 

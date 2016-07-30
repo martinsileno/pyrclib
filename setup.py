@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 # ==============================================================================
 # Installer script, run with:
@@ -11,11 +11,10 @@ setup(name='pyrclib',
       author='Martin Sileno',
       author_email='martin@1way.it',
       license='MIT',
-      url='http://trac.1way.it/',
-      packages=['pyrclib'],
+      url='https://github.com/martinsileno/pyrclib',
+      packages=['example', 'pyrclib'],
       classifiers=[
           'Intended Audience :: Developers',
           'Programming Language :: Python',
-          'Topic :: Communications :: IRC',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ])

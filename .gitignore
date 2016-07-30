@@ -5,3 +5,4 @@ dist/*
 .settings/*
 .idea/*
 pyrclib/__pycache__/*
+pyrclib.egg-info/*
