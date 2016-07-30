@@ -1,8 +1,10 @@
+import logging
 import socket
 
 from pyrclib.linereceiver import LineReceiver
 from pyrclib.linesender import LineSender
-from pyrclib.logger import Logger
+
+logger = logging.getLogger(__name__)
 
 
 class IRCConnection(object):
@@ -14,7 +16,6 @@ class IRCConnection(object):
         self.user = user
         self.realname = realname
         self.delay = 0
-        self.logger = Logger()
         self.is_connected = False
 
     def connect(self, address, port=6667, password=None, useSSL=False):
@@ -26,25 +27,31 @@ class IRCConnection(object):
         """
         self.server = address
         if self.is_connected:
+            logger.error('Trying to connect to %s:%s while already connected'
+                         'to %s', address, port, self.server)
             raise AlreadyConnectedException()
 
-        self.logger.log('Connecting to server: {0}'.format(address))
+        logger.info('Connecting to server %s:%s', address, port)
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((address, port))  # TODO: Exceptions?
+        logger.debug('Socket initialized and connected')
 
         if useSSL:
             try:
                 import ssl
             except ImportError:
+                logger.exception('SSL not available')
                 raise SSLNotAvailableException()
             s = ssl.wrap_socket(s)
 
         fo = s.makefile('rb')
         self.receiver = LineReceiver(self, fo)
+        logger.debug('Initialized line receiver')
 
         # Manually handle connection to the server
         self.sender = LineSender(self, s, fo, self.delay)
+        logger.debug('Initialized line sender')
 
         if password:
             self.sender.raw_line('PASS {0}'.format(password))
@@ -62,7 +69,7 @@ class IRCConnection(object):
             if line[-2:] == '\r\n':
                 line = line[:-2]
 
-            self.logger.log(line)
+            logger.info('<<< %s', line)
             if line.startswith('PING') or line.startswith('PONG'):
                 self.sender.raw_line('PONG ' + line.split(' ')[1])
                 continue
@@ -78,6 +85,7 @@ class IRCConnection(object):
 
         self.receiver.start()
         self.sender.start()
+        logger.debug('Start receiver and sender threads')
         self.on_connect()
 
     def disconnect(self, quitmsg=None):

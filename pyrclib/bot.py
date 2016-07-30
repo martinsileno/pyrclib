@@ -1,3 +1,4 @@
+import logging
 import re
 import time
 from collections import deque
@@ -13,8 +14,12 @@ from pyrclib.user import User, get_user_from_mask
 class IRCBot(IRCConnection):
 
     def __init__(self, nick, user, realname):
+        logging.basicConfig(
+            format='%(asctime)s [%(levelname)8s] %(name)12s - %(message)s',
+            level=logging.INFO,
+        )
         IRCConnection.__init__(self, nick, user, realname)
-        self.version = '0.2.2'
+        self.version = '0.2.4'
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}

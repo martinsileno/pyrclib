@@ -1,4 +1,8 @@
+import logging
+
 from pyrclib.linehandler import LineHandler
+
+logger = logging.getLogger(__name__)
 
 
 class LineReceiver(LineHandler):
@@ -29,7 +33,7 @@ class LineReceiver(LineHandler):
         self._bot.sender.stop()
         self._bot.is_connected = False
         self._bot.on_disconnect()
-        self._bot.logger.log('Disconnected from {0}'.format(self._bot.server))
+        logger.info('Disconnected from %s', self._bot.server)
 
     def run(self):
         while self._bot.is_connected:
@@ -40,8 +44,8 @@ class LineReceiver(LineHandler):
                 break
 
             try:
-                self._bot.logger.log(line)
+                logger.info('<<< %s', line)
                 self._bot.line_received(line)
             except Exception as exc:
-                # TODO: Unhandled exception in bot's line receiver
+                logger.exception('Unhandled exception in line receiver')
                 raise exc

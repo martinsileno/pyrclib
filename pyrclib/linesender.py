@@ -1,6 +1,9 @@
+import logging
 import time
 from collections import deque
 from pyrclib.linehandler import LineHandler
+
+logger = logging.getLogger(__name__)
 
 
 class LineSender(LineHandler):
@@ -20,7 +23,7 @@ class LineSender(LineHandler):
 
     def raw_line(self, line):
         self._socket.sendall((line + self._CRLF).encode())
-        self._bot.logger.log('>>> ' + line)
+        logger.info('>>> %s', line)
 
     def run(self):
         while self.alive:
