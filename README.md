@@ -24,26 +24,25 @@ import pyrclib
 
 This example will show how to make a simple bot.
 
+The source code is available [here](https://github.com/martinsileno/pyrclib/blob/master/example/simplebot.py).
+
 Our bot will just join a channel and will say `hi` to people who greet it with `hi nicebot` or `hey nicebot`.
 
 ```python
 from pyrclib.bot import IRCBot
 
+
 class NiceBot(IRCBot):
-	def __init__(self):
-                self.nick = 'NiceBot'
-                self.user = 'NiceBot'
-		self.realname = 'NiceBot'
-		IRCBot.__init__(self)
-	
-	def on_privmsg(self, sender, channel, message):
-		if message.lower() == 'hi nicebot' or message.lower() == 'hey nicebot':
-			self.privmsg(channel, 'Hi {0}!'.format(sender.nick))
+
+    def on_privmsg(self, sender, channel, message):
+        if message.lower() == 'hi nicebot' or message.lower() == 'hey nicebot':
+            self.privmsg(channel, 'Hi {0}!'.format(sender.nick))
+
 
 if __name__ == '__main__':
-	p = NiceBot()
-	p.connect('irc.eu.rizon.net', 6667)
-	p.join_channel('#mychannel')
+    p = NiceBot('NiceBot', 'nicebot', 'Nice Bot')
+    p.connect('irc.eu.rizon.net', 6667)
+    p.join('#mychannel')
 ```
 
 ```
@@ -58,14 +57,6 @@ if __name__ == '__main__':
 First, we need to import IRCBot module
 ```python
 from pyrclib.bot import IRCBot
-```
-
-### Initialization ###
-
-```python
-class NiceBot(IRCBot):
-	def __init__(self):
-		IRCBot.__init__(self)
 ```
 
 This part initializes our bot's internal properties.
@@ -107,10 +98,10 @@ if __name__ == '__main__':
 
 will be executed when you run this python file with `python filename.py`.
 
-Here we'll need to initialize the bot (see above)
+Here we'll need to initialize the bot with a nick/user/realname:
 
 ```python
-	p = NiceBot()
+	p = NiceBot('NiceBot', 'nicebot', 'Nice Bot')
 ```
 
 make it connect to a server:
@@ -122,5 +113,5 @@ make it connect to a server:
 make it join our channel:
 
 ```python
-	p.join_channel('#mychannel')
+	p.join('#mychannel')
 ```
