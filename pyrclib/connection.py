@@ -17,6 +17,9 @@ class IRCConnection(object):
         self.realname = realname
         self.delay = 0
         self.is_connected = False
+        self.server = None
+        self.receiver = None
+        self.sender = None
 
     def connect(self, address, port=6667, password=None, useSSL=False):
         """Connect to the specified IRC server.
