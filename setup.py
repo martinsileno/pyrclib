@@ -13,6 +13,7 @@ setup(name='pyrclib',
       license='MIT',
       url='https://github.com/martinsileno/pyrclib',
       packages=['example', 'pyrclib'],
+      test_suite='pyrclib.tests',
       classifiers=[
           'Intended Audience :: Developers',
           'Programming Language :: Python',
