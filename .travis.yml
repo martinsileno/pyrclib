@@ -6,3 +6,5 @@ python:
   - "nightly" # currently points to 3.6-dev
 
 script: python setup.py test
+after_success:
+  - coveralls
