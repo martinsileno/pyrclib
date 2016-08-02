@@ -5,6 +5,7 @@ from collections import deque
 from datetime import datetime
 from operator import itemgetter
 
+import pyrclib
 from pyrclib.channels import Channel
 from pyrclib.connection import IRCConnection
 from pyrclib.events import EventDispatcher
@@ -19,7 +20,7 @@ class IRCBot(IRCConnection):
             level=logging.INFO,
         )
         IRCConnection.__init__(self, nick, user, realname)
-        self.version = '0.2.5'
+        self.version = pyrclib.__version__
         self.delay = 1000
         self.dispatcher = EventDispatcher(self)
         self.protocol = {}

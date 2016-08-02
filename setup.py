@@ -1,12 +1,14 @@
 from setuptools import setup
 
+import pyrclib
+
 # ==============================================================================
 # Installer script, run with:
 # python setup.py install
 # ==============================================================================
 
 setup(name='pyrclib',
-      version='0.2.5',
+      version=pyrclib.__version__,
       description='Python IRC bot framework',
       author='Martin Sileno',
       author_email='martin@1way.it',
