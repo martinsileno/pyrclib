@@ -1,5 +1,5 @@
 [report]
-exclude_lines = 
+exclude_lines =
     pragma: no cover
     def __str__
     def __repr__
@@ -7,10 +7,10 @@ exclude_lines =
     if settings.DEBUG
     raise AssertionError
     raise NotImplementedError
+    pass
     if 0:
     if __name__ == .__main__.:
 
 [run]
-source = pyrclib 
+source = pyrclib
 omit = pyrclib/tests/*
-
