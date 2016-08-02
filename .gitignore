@@ -6,3 +6,6 @@ dist/*
 .idea/*
 pyrclib/__pycache__/*
 pyrclib.egg-info/*
+htmlcov/*
+.coveralls.yml
+.coverage
