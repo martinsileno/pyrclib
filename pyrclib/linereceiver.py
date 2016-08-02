@@ -48,4 +48,3 @@ class LineReceiver(LineHandler):
                 self._bot.line_received(line)
             except Exception as exc:
                 logger.exception('Unhandled exception in line receiver')
-                raise exc
